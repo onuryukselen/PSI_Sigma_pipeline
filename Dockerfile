@@ -19,7 +19,7 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86
     
 # configure image 
 RUN apt-get -y update 
-RUN apt-get -y install software-properties-common
+RUN apt-get -y install software-properties-common build-essential
 RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran40/'
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 RUN apt-get -y install apt-transport-https
