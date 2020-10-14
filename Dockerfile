@@ -31,8 +31,8 @@ RUN mkdir -p /project /nl /mnt /share
 
 # Install PSI-Sigma
 RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9j.tar.gz && \
-    tar -xzf v1.9j.tar.gz && ls PSI-Sigma-1.9j
-ENV PATH /PSI-Sigma-1.9j:$PATH
+    tar -xzf v1.9j.tar.gz && mv PSI-Sigma-1.9j && /usr/local/bin/PSI-Sigma-1.9j
+ENV PATH /usr/local/bin/PSI-Sigma-1.9j:$PATH
 
 # SET PERL5LIB
 ENV PERL5LIB=/usr/local/lib/x86_64-linux-gnu/perl/5.22.1
