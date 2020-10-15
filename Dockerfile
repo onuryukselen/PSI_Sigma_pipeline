@@ -28,6 +28,7 @@ RUN apt-get -y update
 COPY environment.yml /
 RUN conda env create -f /environment.yml && conda clean -a
 RUN mkdir -p /project /nl /mnt /share
+ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-1.0/bin:$PATH
 
 # Install PSI-Sigma
 RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9j.tar.gz && \
