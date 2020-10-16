@@ -21,9 +21,9 @@ input:
  set val(name), file(bai) from g_3_bam_index_g_0
 
 output:
- file "*.bam"  into g_0_bam_file_g_7, g_0_bam_file_g_9
- file "*.bai"  into g_0_bam_index_g_7, g_0_bam_index_g_9
- file "*.tab"  into g_0_tab_file_g_7, g_0_tab_file_g_9
+ file "*.bam"  into g_0_bam_file_g_7, g_0_bam_file_g_9, g_0_bam_file_g_12
+ file "*.bai"  into g_0_bam_index_g_7, g_0_bam_index_g_9, g_0_bam_index_g_12
+ file "*.tab"  into g_0_tab_file_g_7, g_0_tab_file_g_12
 
 script:
 """
@@ -103,8 +103,9 @@ input:
  file bam from g_0_bam_file_g_9
  file bai from g_0_bam_index_g_9
  file db from g_8_db_file_g_9
- file tab from g_0_tab_file_g_9
 
+output:
+ file "*.IR.out.tab"  into g_9_tab_file_g_12
 
 container "onuryukselen/psi_sigma_pipeline"
 
@@ -120,23 +121,93 @@ process prepare_groups {
 input:
  file groups from g_11_all_groups_g_10
 
+output:
+ file "*"  into g_10_all_groups_g_12
 
+// # DMSO_1	A0	DMSO
+// # DMSO_2	A0	DMSO
+// # EXP1_10nM_1	A1	EXP1_10nM
+// # EXP1_10nM_2	A1	EXP1_10nM
+// # EXP2_10nM_1	A2	EXP2_10nM
+// # EXP2_10nM_2	A2	EXP2_10nM
+// # DMSO_CHX_1	B0	DMSO_CHX
+// # DMSO_CHX_2	B0	DMSO_CHX
+// # EXP3_10nM_1	B1	EXP3_10nM
+// # EXP3_10nM_2	B1	EXP3_10nM
+// # EXP4_10nM_1	B2	EXP4_10nM
+// # EXP4_10nM_2	B2	EXP4_10nM
+
+// # create directory of third column
+// # insert groupa and groupb into directory.
+shell:
+'''
+#!/usr/bin/env perl
+use Data::Dumper;
+use strict;
+
+### Parse group file
+my $group_file = "!{groups}";
+open(IN, "<$group_file") or die "Can't open $group_file.\\n";
+#all_groups: 'A' => { '1' => {'cond' => 'EXP1_10nM' file' => ['EXP1_10nM_1','EXP1_10nM_2']}, '0' => {'cond' => 'DMSO','file' => ['DMSO_1','DMSO_2']}
+my %all_groups;
+while(<IN>){
+  chomp;
+  my ($file, $group, $cond) = split("\\t");
+  my ($groupName, $groupId) = split /(\\d+)/, $group;
+
+  if(!exists($all_groups{$groupName}{$groupId})){
+    $all_groups{$groupName}{$groupId} = {"cond" => $cond, "file" => $file};
+  } else{
+    my $files =  $all_groups{$groupName}{$groupId}{"file"};
+    $all_groups{$groupName}{$groupId}{"file"} = $files."\\n".$file;
+  }
+}
+
+
+foreach my $groupName (keys %all_groups){
+  my $contFiles = $all_groups{$groupName}{"0"}{"file"};
+  foreach my $groupId (keys %{ $all_groups{$groupName}}){
+	if ($groupId ne "0"){
+		my $dir = $all_groups{$groupName}{$groupId}{"cond"};
+		my $expfiles = $all_groups{$groupName}{$groupId}{"file"};
+
+		mkdir $dir unless -d $dir; # Check if dir exists. If not create it.
+		open my $out, ">", "$dir/groupa.txt" or die "Can't open '$dir/groupa.txt'\n";
+		print $out $contFiles;
+		close $out;
+		
+		open my $out, ">", "$dir/groupb.txt" or die "Can't open '$dir/groupb.txt'\n";
+		print $out $expfiles;
+		close $out;
+    	
+	} 
+  }
+}
+
+
+print Dumper \\%all_groups;
+'''
+}
+
+params.dummyai_path =  ""  //* @input
+
+process run_PSI_Sigma_ {
+
+input:
+ file cond from g_10_all_groups_g_12.flatten()
+ file ir_out_tab from g_9_tab_file_g_12.collect()
+ file out_tab from g_0_tab_file_g_12.collect()
+ file bam from g_0_bam_file_g_12.collect()
+ file bai from g_0_bam_index_g_12.collect()
+
+
+container "onuryukselen/psi_sigma_pipeline"
+
+script:
 """
-# DMSO_1	A0	DMSO
-# DMSO_2	A0	DMSO
-# EXP1_10nM_1	A1	EXP1_10nM
-# EXP1_10nM_2	A1	EXP1_10nM
-# EXP2_10nM_1	A2	EXP2_10nM
-# EXP2_10nM_2	A2	EXP2_10nM
-# DMSO_CHX_1	B0	DMSO_CHX
-# DMSO_CHX_2	B0	DMSO_CHX
-# EXP3_10nM_1	B1	EXP3_10nM
-# EXP3_10nM_2	B1	EXP3_10nM
-# EXP4_10nM_1	B2	EXP4_10nM
-# EXP4_10nM_2	B2	EXP4_10nM
-
-# create directory of third column
-# insert groupa and groupb into directory.
+mv $ir_out_tab $out_tab $bam $bai $cond/.
+cd $cond
+perl ${params.dummyai_path} --gtf ${params.gtf} --nread 10 --type 1 --name ${cond}_PSIsigma1d9j --irmode 1 --skipratio 0.05 --denominator 0 --irrange 10 --adjp 0
 """
 }
 

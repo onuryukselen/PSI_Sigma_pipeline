@@ -60,7 +60,7 @@ RUN mkdir /gnu \
     && tar zxvf $GSL_TAR \
     && rm -f $GSL_TAR \
     && cd gsl-2.3 \
-    && ./configure --prefix=/gnu/gsl \
+    && ./configure --prefix=/usr/local/lib/x86_64-linux-gnu/perl/5.22.1 \
     && make -j 4 \
     && make install
 
