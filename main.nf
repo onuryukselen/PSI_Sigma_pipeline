@@ -10,7 +10,7 @@ if (!params.all_groups){params.all_groups = ""}
 Channel.fromPath(params.bam, type: 'any').map{ file -> tuple(file.baseName, file) }.set{g_1_bam_file_g_0}
 Channel.fromPath(params.tab, type: 'any').map{ file -> tuple(file.baseName, file) }.set{g_2_outputFileTab_g_0}
 Channel.fromPath(params.bai, type: 'any').map{ file -> tuple(file.baseName, file) }.set{g_3_bam_index_g_0}
-g_11_all_groups_g_10 = file(params.all_groups, type: 'any') 
+g_13_all_groups_g_10 = file(params.all_groups, type: 'any') 
 
 
 process rename {
@@ -35,8 +35,6 @@ for file in *SJ.out.tab ; do mv \$file \${file//_Merged_SJ\\.out\\.tab/\\.SJ\\.o
 
 }
 
-chromosome_list = params.PSI_Sigma_prep.chromosome_list
-chromosome_list = chromosome_list.split(',')
 
 process PSI_Sigma_prep {
 
@@ -45,9 +43,13 @@ output:
  val chromosome_list  into g_5_name_g_7
 
 script:
+chromosome_list = params.PSI_Sigma_prep.chromosome_list
+chromosome_list = chromosome_list.split(',')
+chromosome_list*.trim()
 """
 echo ${chromosome_list}
 """
+
 }
 
 params.PSIsigma_db_path =  ""  //* @input
@@ -58,7 +60,7 @@ input:
  file bam from g_0_bam_file_g_7.collect()
  file bai from g_0_bam_index_g_7.collect()
  file tab from g_0_tab_file_g_7.collect()
- val chr_name from g_5_name_g_7.unique().flatten()
+ val chr_name from g_5_name_g_7.flatten()
 
 output:
  file "*.txt"  into g_7_groups
@@ -74,7 +76,7 @@ counta=\$(printf "%.0f" \$((\$total/2)))
 countb=\$((total-counta))
 ls *.SJ.out.tab|sed 's/.SJ.out.tab//'|head -n \$counta > groupa.txt
 ls *.SJ.out.tab|sed 's/.SJ.out.tab//'|tail -n \$countb > groupb.txt
-perl ${params.PSIsigma_db_path} ${params.gtf} ${chr_name} 5 1 1
+perl ${params.PSIsigma_db_path} ${params.gtf} $chr_name 5 1 1
 """
 }
 
@@ -119,7 +121,7 @@ perl ${params.PSIsigma_ir_path} $db $bam 1
 process prepare_groups {
 
 input:
- file groups from g_11_all_groups_g_10
+ file groups from g_13_all_groups_g_10
 
 output:
  file "*"  into g_10_all_groups_g_12

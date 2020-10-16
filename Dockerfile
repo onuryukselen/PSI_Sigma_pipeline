@@ -36,36 +36,34 @@ RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9j.tar.gz && \
 ENV PATH /usr/local/bin/PSI-Sigma-1.9j:$PATH
 
 # SET PERL5LIB
-ENV PERL5LIB=/usr/local/lib/x86_64-linux-gnu/perl/5.22
+ENV PERL5LIB="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
 # 1. Install cpanm
 RUN cpan App::cpanminus
-
+RUN cpanm PDL::LiteF
+RUN cpanm PDL::Stats
 
 # 2. Install GSL 
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y git make g++ gcc libpdl-stats-perl \
+RUN apt-get install -y git make g++ gcc \
     python wget
 
-ENV GSL_TAR="gsl-2.3.tar.gz"
-ENV GSL_DL="http://ftp.wayne.edu/gnu/gsl/$GSL_TAR"
+ENV GSL_TAR="gsl-2.4.tar.gz"
+ENV GSL_DL="ftp://ftp.gnu.org/gnu/gsl/$GSL_TAR"
 
 ENV GSL_ROOT="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
 ENV LD_LIBRARY_PATH="$GSL_ROOT/lib:$LD_LIBRARY_PATH"
 
 ENV GSL_INC="/usr/local/lib/x86_64-linux-gnu/perl/5.22/include"
 
-RUN mkdir /gnu \
-    && wget -q $GSL_DL \
+RUN wget -q $GSL_DL \
     && tar zxvf $GSL_TAR \
     && rm -f $GSL_TAR \
-    && cd gsl-2.3 \
+    && cd gsl-2.4 \
     && ./configure --prefix=/usr/local/lib/x86_64-linux-gnu/perl/5.22 \
     && make -j 4 \
     && make install
 
 # 3. Install PDL::GSL
-RUN cpanm PDL::LiteF
-RUN cpanm PDL::Stats
 RUN cpanm PDL::GSL::CDF
 RUN cpanm Statistics::Multtest
     
