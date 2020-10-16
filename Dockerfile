@@ -44,8 +44,7 @@ RUN cpanm PDL::Stats
 
 # 2. Install GSL 
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y git make g++ gcc \
-    python wget
+RUN apt-get install -y git make g++ gcc python wget libpdl-stats-perl
 
 ENV GSL_TAR="gsl-2.4.tar.gz"
 ENV GSL_DL="ftp://ftp.gnu.org/gnu/gsl/$GSL_TAR"
