@@ -49,21 +49,21 @@ RUN cpanm PDL::LiteF
 #RUN cpanm PDL::Stats
 RUN cpanm Statistics::Multtest
 
-#ENV GSL_TAR="gsl-2.4.tar.gz"
-#ENV GSL_DL="ftp://ftp.gnu.org/gnu/gsl/$GSL_TAR"
+ENV GSL_TAR="gsl-2.4.tar.gz"
+ENV GSL_DL="ftp://ftp.gnu.org/gnu/gsl/$GSL_TAR"
 
-#ENV GSL_ROOT="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
-#ENV LD_LIBRARY_PATH="$GSL_ROOT/lib:$LD_LIBRARY_PATH"
+ENV GSL_ROOT="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
+ENV LD_LIBRARY_PATH="$GSL_ROOT/lib:$LD_LIBRARY_PATH"
 
-# ENV GSL_INC="/usr/local/lib/x86_64-linux-gnu/perl/5.22/include"
+ ENV GSL_INC="/usr/local/lib/x86_64-linux-gnu/perl/5.22/include"
 
-# RUN wget -q $GSL_DL \
-#    && tar zxvf $GSL_TAR \
-#    && rm -f $GSL_TAR \
-#    && cd gsl-2.4 \
-#    && ./configure --prefix=/usr/local/lib/x86_64-linux-gnu/perl/5.22 \
-#    && make -j 4 \
-#    && make install
+ RUN wget -q $GSL_DL \
+    && tar zxvf $GSL_TAR \
+    && rm -f $GSL_TAR \
+    && cd gsl-2.4 \
+    && ./configure --prefix=/usr/local/lib/x86_64-linux-gnu/perl/5.22 \
+    && make -j 4 \
+    && make install
 
 # 3. Install PDL::GSL
 # RUN cpanm PDL::GSL::CDF
