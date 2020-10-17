@@ -44,10 +44,8 @@ RUN cpan App::cpanminus
 
 # 2. Install GSL 
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y git make g++ gcc python wget libpdl-stats-perl
-RUN cpanm PDL::LiteF
-#RUN cpanm PDL::Stats
-RUN cpanm Statistics::Multtest
+RUN apt-get install -y git make g++ gcc python wget
+
 
 ENV GSL_TAR="gsl-2.4.tar.gz"
 ENV GSL_DL="ftp://ftp.gnu.org/gnu/gsl/$GSL_TAR"
@@ -55,9 +53,9 @@ ENV GSL_DL="ftp://ftp.gnu.org/gnu/gsl/$GSL_TAR"
 ENV GSL_ROOT="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
 ENV LD_LIBRARY_PATH="$GSL_ROOT/lib:$LD_LIBRARY_PATH"
 
- ENV GSL_INC="/usr/local/lib/x86_64-linux-gnu/perl/5.22/include"
+ENV GSL_INC="/usr/local/lib/x86_64-linux-gnu/perl/5.22/include"
 
- RUN wget -q $GSL_DL \
+RUN wget -q $GSL_DL \
     && tar zxvf $GSL_TAR \
     && rm -f $GSL_TAR \
     && cd gsl-2.4 \
@@ -66,6 +64,9 @@ ENV LD_LIBRARY_PATH="$GSL_ROOT/lib:$LD_LIBRARY_PATH"
     && make install
 
 # 3. Install PDL::GSL
+RUN cpanm PDL::LiteF
+RUN cpanm PDL::Stats
+RUN cpanm Statistics::Multtest
 # RUN cpanm PDL::GSL::CDF
 # RUN cpanm Statistics::Multtest
     
