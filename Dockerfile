@@ -46,7 +46,7 @@ RUN cpan App::cpanminus
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y git make g++ gcc python wget libpdl-stats-perl
 RUN cpanm PDL::LiteF
-RUN cpanm PDL::Stats
+#RUN cpanm PDL::Stats
 RUN cpanm Statistics::Multtest
 
 #ENV GSL_TAR="gsl-2.4.tar.gz"
