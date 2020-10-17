@@ -203,7 +203,7 @@ input:
  file bai from g_0_bam_index_g_12.collect()
 
 
-container "onuryukselen/psi_sigma_pipeline"
+container "onuryukselen/psi_sigma_pipeline:1.0"
 
 script:
 """
