@@ -36,7 +36,8 @@ RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9j.tar.gz && \
 ENV PATH /usr/local/bin/PSI-Sigma-1.9j:$PATH
 
 # SET PERL5LIB
-ENV PERL5LIB="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
+ENV LOCALCPANM="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
+ENV PERL5LIB="/usr/local/lib/x86_64-linux-gnu/perl/5.22:lib/perl5/x86_64-linux-gnu-thread-multi:/usr/local/lib/x86_64-linux-gnu/perl/5.22:lib/perl5/:/usr/local/lib/x86_64-linux-gnu/perl/5.22"
 # 1. Install cpanm
 RUN cpan App::cpanminus
 # RUN cpanm PDL::LiteF
@@ -64,9 +65,8 @@ RUN wget -q $GSL_DL \
     && make install
 
 # 3. Install PDL::GSL
-RUN cpanm PDL::LiteF
-RUN cpanm PDL::Stats
-RUN cpanm Statistics::Multtest
-# RUN cpanm PDL::GSL::CDF
-# RUN cpanm Statistics::Multtest
+RUN cpanm --local-lib $LOCALCPANM PDL::LiteF
+RUN cpanm --local-lib $LOCALCPANM PDL::Stats
+RUN cpanm --local-lib $LOCALCPANM Statistics::Multtest
+RUN cpanm --local-lib $LOCALCPANM PDL::GSL::CDF
     
