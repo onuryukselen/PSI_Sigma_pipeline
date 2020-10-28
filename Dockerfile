@@ -21,7 +21,8 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86
 RUN apt-get -y update 
 RUN apt-get -y install software-properties-common build-essential
 RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran40/'
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+#RUN apt-key adv --keyserver pgp.mit.edu --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 RUN apt-get -y install apt-transport-https
 RUN apt-get -y update
 
@@ -35,9 +36,17 @@ RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9j.tar.gz && \
     tar -xzf v1.9j.tar.gz && mv PSI-Sigma-1.9j /usr/local/bin/PSI-Sigma-1.9j
 ENV PATH /usr/local/bin/PSI-Sigma-1.9j:$PATH
 
+# Install compiler and perl stuff
+RUN apt-get install --yes \
+ build-essential \
+ gcc-multilib \
+ apt-utils \
+ perl \
+ expat \
+ libexpat-dev 
+
 # SET PERL5LIB
-ENV LOCALCPANM="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
-ENV PERL5LIB="/usr/local/lib/x86_64-linux-gnu/perl/5.22:lib/perl5/x86_64-linux-gnu-thread-multi:/usr/local/lib/x86_64-linux-gnu/perl/5.22:lib/perl5/:/usr/local/lib/x86_64-linux-gnu/perl/5.22"
+ENV PERL5LIB="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
 # 1. Install cpanm
 RUN cpan App::cpanminus
 # RUN cpanm PDL::LiteF
@@ -65,8 +74,16 @@ RUN wget -q $GSL_DL \
     && make install
 
 # 3. Install PDL::GSL
-RUN cpanm --local-lib $LOCALCPANM PDL::LiteF
-RUN cpanm --local-lib $LOCALCPANM PDL::Stats
-RUN cpanm --local-lib $LOCALCPANM Statistics::Multtest
-RUN cpanm --local-lib $LOCALCPANM PDL::GSL::CDF
-    
+RUN cpan App::cpanminus 
+RUN cpanm PDL::LiteF
+RUN cpanm PDL::Stats
+
+RUN wget ftp://ftp.gnu.org/gnu/gsl/gsl-2.4.tar.gz \
+    && tar zxvf gsl-2.4.tar.gz \
+    && cd gsl-2.4 \
+    && ./configure \
+    && make \
+    && make install 
+
+RUN cpanm PDL::GSL::CDF
+RUN cpanm Statistics::Multtest

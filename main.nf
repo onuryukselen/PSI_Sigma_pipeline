@@ -52,7 +52,7 @@ echo ${chromosome_list}
 
 }
 
-params.PSIsigma_db_path =  ""  //* @input
+//* params.PSIsigma_db_path =  ""  //* @input
 
 process create_db {
 
@@ -97,7 +97,7 @@ cat *.bed.tmp > PSIsigma1d9j.bed
 """
 }
 
-params.PSIsigma_ir_path =  ""  //* @input
+//* params.PSIsigma_ir_path =  ""  //* @input
 
 process create_intronic_read {
 
@@ -191,7 +191,7 @@ print Dumper \\%all_groups;
 '''
 }
 
-params.dummyai_path =  ""  //* @input
+//* params.dummyai_path =  ""  //* @input
 
 process run_PSI_Sigma_ {
 
