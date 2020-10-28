@@ -74,7 +74,6 @@ RUN wget -q $GSL_DL \
     && make install
 
 # 3. Install PDL::GSL
-RUN cpan App::cpanminus 
 RUN cpanm PDL::LiteF
 RUN cpanm PDL::Stats
 
