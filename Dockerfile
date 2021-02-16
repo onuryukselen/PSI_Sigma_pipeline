@@ -24,16 +24,20 @@ RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 RUN apt-get -y install apt-transport-https
 RUN apt-get -y update
+RUN apt-get install r-base
+RUN R -e "install.packages('BiocManager')"
+RUN R -e "BiocManager::install('qvalue')"
+
 
 COPY environment.yml /
 RUN conda env create -f /environment.yml && conda clean -a
 RUN mkdir -p /project /nl /mnt /share
-ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-1.0/bin:$PATH
+ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-2.0/bin:$PATH
 
 # Install PSI-Sigma
-RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9j.tar.gz && \
-    tar -xzf v1.9j.tar.gz && mv PSI-Sigma-1.9j /usr/local/bin/PSI-Sigma-1.9j
-ENV PATH /usr/local/bin/PSI-Sigma-1.9j:$PATH
+RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9k.tar.gz && \
+    tar -xzf v1.9k.tar.gz && mv PSI-Sigma-1.9k /usr/local/bin/PSI-Sigma-1.9k
+ENV PATH /usr/local/bin/PSI-Sigma-1.9k:$PATH
 
 # SET PERL5LIB
 ENV PERL5LIB="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
@@ -66,4 +70,4 @@ RUN wget -q $GSL_DL \
 # 3. Install PDL::GSL
 RUN cpanm PDL::GSL::CDF
 RUN cpanm Statistics::Multtest
-    
+RUN cpanm Statistics::R
