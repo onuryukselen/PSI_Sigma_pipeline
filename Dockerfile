@@ -24,7 +24,7 @@ RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 RUN apt-get -y install apt-transport-https
 RUN apt-get -y update
-RUN apt-get install r-base
+RUN apt-get -y install r-base
 RUN R -e "install.packages('BiocManager')"
 RUN R -e "BiocManager::install('qvalue')"
 
