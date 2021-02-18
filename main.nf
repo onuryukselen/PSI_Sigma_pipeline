@@ -163,7 +163,7 @@ output:
  file "*.tmp"  into g_22_tmp_file_g_8
  val db_name  into g_22_db_name_g_8
 
-container "dolphinnext/psi_sigma_pipeline:2.0"
+container "onuryukselen/psi_sigma_pipeline:2.0"
 
 script:
 custom_gtf = custom_gtf.toString()
@@ -314,7 +314,7 @@ input:
 output:
  file "*.IR.out.tab"  into g_23_tab_file_g_24
 
-container "dolphinnext/psi_sigma_pipeline:2.0"
+container "onuryukselen/psi_sigma_pipeline:2.0"
 
 script:
 """
@@ -346,7 +346,7 @@ input:
 output:
  file "*"  into g_24_outputDir
 
-container "dolphinnext/psi_sigma_pipeline:2.0"
+container "onuryukselen/psi_sigma_pipeline:2.0"
 
 script:
 PSI_sigma_parameters = params.PSI_Sigma_run.PSI_sigma_parameters

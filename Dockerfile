@@ -21,13 +21,13 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86
 RUN apt-get -y update 
 RUN apt-get -y install software-properties-common build-essential
 RUN add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran40/'
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+#RUN apt-key adv --keyserver pgp.mit.edu --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 RUN apt-get -y install apt-transport-https
 RUN apt-get -y update
 RUN apt-get -y install r-base
 RUN R -e "install.packages('BiocManager')"
 RUN R -e "BiocManager::install('qvalue')"
-
 
 COPY environment.yml /
 RUN conda env create -f /environment.yml && conda clean -a
@@ -39,17 +39,26 @@ RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9k.tar.gz && \
     tar -xzf v1.9k.tar.gz && mv PSI-Sigma-1.9k /usr/local/bin/PSI-Sigma-1.9k
 ENV PATH /usr/local/bin/PSI-Sigma-1.9k:$PATH
 
+# Install compiler and perl stuff
+RUN apt-get install --yes \
+ build-essential \
+ gcc-multilib \
+ apt-utils \
+ perl \
+ expat \
+ libexpat-dev 
+
 # SET PERL5LIB
 ENV PERL5LIB="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
 # 1. Install cpanm
 RUN cpan App::cpanminus
-RUN cpanm PDL::LiteF
-RUN cpanm PDL::Stats
+# RUN cpanm PDL::LiteF
+# RUN cpanm PDL::Stats
 
 # 2. Install GSL 
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y git make g++ gcc \
-    python wget
+RUN apt-get install -y git make g++ gcc python wget
+
 
 ENV GSL_TAR="gsl-2.4.tar.gz"
 ENV GSL_DL="ftp://ftp.gnu.org/gnu/gsl/$GSL_TAR"
@@ -68,6 +77,16 @@ RUN wget -q $GSL_DL \
     && make install
 
 # 3. Install PDL::GSL
+RUN cpanm PDL::LiteF
+RUN cpanm PDL::Stats
+
+RUN wget ftp://ftp.gnu.org/gnu/gsl/gsl-2.4.tar.gz \
+    && tar zxvf gsl-2.4.tar.gz \
+    && cd gsl-2.4 \
+    && ./configure \
+    && make \
+    && make install 
+
 RUN cpanm PDL::GSL::CDF
 RUN cpanm Statistics::Multtest
 RUN cpanm Statistics::R
