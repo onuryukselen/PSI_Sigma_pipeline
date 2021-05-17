@@ -32,12 +32,12 @@ RUN R -e "BiocManager::install('qvalue')"
 COPY environment.yml /
 RUN conda env create -f /environment.yml && conda clean -a
 RUN mkdir -p /project /nl /mnt /share
-ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-2.0/bin:$PATH
+ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-3.0/bin:$PATH
 
 # Install PSI-Sigma
-RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9k.tar.gz && \
-    tar -xzf v1.9k.tar.gz && mv PSI-Sigma-1.9k /usr/local/bin/PSI-Sigma-1.9k
-ENV PATH /usr/local/bin/PSI-Sigma-1.9k:$PATH
+RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9l.tar.gz && \
+    tar -xzf v1.9l.tar.gz && mv PSI-Sigma-1.9l /usr/local/bin/PSI-Sigma-1.9l
+ENV PATH /usr/local/bin/PSI-Sigma-1.9l:$PATH
 
 # Install compiler and perl stuff
 RUN apt-get install --yes \
@@ -48,45 +48,20 @@ RUN apt-get install --yes \
  expat \
  libexpat-dev 
 
+
+
 # SET PERL5LIB
 ENV PERL5LIB="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
 # 1. Install cpanm
 RUN cpan App::cpanminus
-# RUN cpanm PDL::LiteF
-# RUN cpanm PDL::Stats
 
 # 2. Install GSL 
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y git make g++ gcc python wget
-
-
-ENV GSL_TAR="gsl-2.4.tar.gz"
-ENV GSL_DL="ftp://ftp.gnu.org/gnu/gsl/$GSL_TAR"
-
-ENV GSL_ROOT="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
-ENV LD_LIBRARY_PATH="$GSL_ROOT/lib:$LD_LIBRARY_PATH"
-
-ENV GSL_INC="/usr/local/lib/x86_64-linux-gnu/perl/5.22/include"
-
-RUN wget -q $GSL_DL \
-    && tar zxvf $GSL_TAR \
-    && rm -f $GSL_TAR \
-    && cd gsl-2.4 \
-    && ./configure --prefix=/usr/local/lib/x86_64-linux-gnu/perl/5.22 \
-    && make -j 4 \
-    && make install
+RUN apt-get install -y git make g++ gcc python wget libgsl0-dev
 
 # 3. Install PDL::GSL
 RUN cpanm PDL::LiteF
-RUN cpanm PDL::Stats
-
-RUN wget ftp://ftp.gnu.org/gnu/gsl/gsl-2.4.tar.gz \
-    && tar zxvf gsl-2.4.tar.gz \
-    && cd gsl-2.4 \
-    && ./configure \
-    && make \
-    && make install 
-
 RUN cpanm PDL::GSL::CDF
+RUN cpanm PDL::Stats
 RUN cpanm Statistics::Multtest
 RUN cpanm Statistics::R

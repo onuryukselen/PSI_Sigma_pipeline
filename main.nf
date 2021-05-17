@@ -75,9 +75,9 @@ if ($HOSTNAME){
     params.samtools_path = "samtools"
     params.pdfbox_path = "/usr/local/bin/dolphin-tools/pdfbox-app-2.0.0-RC2.jar"
     params.gtf2bed_path = "/usr/local/bin/dolphin-tools/gtf2bed"
-    params.PSIsigma_db_path = "/usr/local/bin/PSI-Sigma-1.9j/PSIsigma-db-v.1.0.pl"
-    params.PSIsigma_ir_path = "/usr/local/bin/PSI-Sigma-1.9j/PSIsigma-ir-v.1.2.pl"
-    params.dummyai_path = "/usr/local/bin/PSI-Sigma-1.9j/dummyai.pl"
+    params.PSIsigma_db_path = "/usr/local/bin/PSI-Sigma-1.9k/PSIsigma-db-v.1.0.pl"
+    params.PSIsigma_ir_path = "/usr/local/bin/PSI-Sigma-1.9k/PSIsigma-ir-v.1.2.pl"
+    params.dummyai_path = "/usr/local/bin/PSI-Sigma-1.9k/dummyai.pl"
     $CPU  = 1
     $MEMORY = 10
 }
@@ -87,17 +87,19 @@ if ($HOSTNAME){
 if (!params.bam){params.bam = ""} 
 if (!params.tab){params.tab = ""} 
 if (!params.custom_gtf){params.custom_gtf = ""} 
+if (!params.gtf){params.gtf = ""} 
 
 Channel.fromPath(params.bam, type: 'any').map{ file -> tuple(file.baseName, file) }.set{g_1_bam_file_g_18}
 Channel.fromPath(params.tab, type: 'any').map{ file -> tuple(file.baseName, file) }.set{g_2_outputFileTab_g_18}
-Channel.value(params.custom_gtf).into{g_20_gtfFilePath_g_22;g_20_gtfFilePath_g_24}
+Channel.value(params.custom_gtf).into{g_20_gtfFilePath_g_24;g_20_gtfFilePath_g_26}
+Channel.value(params.gtf).set{g_28_gtfFilePath_g_27}
 
 
 process PSI_Sigma_prep {
 
 
 output:
- val chromosome_list  into g_5_name_g_22
+ val chromosome_list  into g_5_name_g_26, g_5_name_g_27
 
 when:
 (params.run_PSI_Sigma && (params.run_PSI_Sigma == "yes")) || !params.run_PSI_Sigma
@@ -120,9 +122,9 @@ input:
  set val(name_tab), file(tab) from g_2_outputFileTab_g_18
 
 output:
- file "*.bam"  into g_18_bam_file_g_22, g_18_bam_file_g_23, g_18_bam_file_g_24
- file "*.bai"  into g_18_bam_index_g_22, g_18_bam_index_g_23, g_18_bam_index_g_24
- file "*.tab"  into g_18_tab_file_g_22, g_18_tab_file_g_24
+ file "*.bam"  into g_18_bam_file_g_23, g_18_bam_file_g_24, g_18_bam_file_g_26, g_18_bam_file_g_27
+ file "*.bai"  into g_18_bam_index_g_23, g_18_bam_index_g_24, g_18_bam_index_g_26, g_18_bam_index_g_27
+ file "*.tab"  into g_18_tab_file_g_24, g_18_tab_file_g_26, g_18_tab_file_g_27
 
 when:
 (params.run_PSI_Sigma && (params.run_PSI_Sigma == "yes")) || !params.run_PSI_Sigma
@@ -144,30 +146,69 @@ mv ${name_tab}.tab ${name_tab}.SJ.out.tab
 
 }
 
-g_20_gtfFilePath_g_22= g_20_gtfFilePath_g_22.ifEmpty([""]) 
-
 //* params.PSIsigma_db_path =  ""  //* @input
 //* params.gtf =  ""  //* @input
 
 process create_db {
 
 input:
- file bam from g_18_bam_file_g_22.collect()
- file bai from g_18_bam_index_g_22.collect()
- file tab from g_18_tab_file_g_22.collect()
- val chr_name from g_5_name_g_22.flatten()
- val custom_gtf from g_20_gtfFilePath_g_22
+ file bam from g_18_bam_file_g_27.collect()
+ file bai from g_18_bam_index_g_27.collect()
+ file tab from g_18_tab_file_g_27.collect()
+ val chr_name from g_5_name_g_27.flatten()
+ val custom_gtf from g_28_gtfFilePath_g_27
 
 output:
- file "*.txt"  into g_22_groups
- file "*.tmp"  into g_22_tmp_file_g_8
- val db_name  into g_22_db_name_g_8
+ file "*.txt"  into g_27_groups
+ file "*.tmp"  into g_27_tmp_file
+ val db_name  into g_27_db_name
 
 container "onuryukselen/psi_sigma_pipeline:2.0"
 
 script:
 custom_gtf = custom_gtf.toString()
-db_name = (custom_gtf.charAt(0) == "/" && !custom_gtf.isEmpty()) ? "PSIsigma1d9j_StringTie": "PSIsigma1d9j" 
+db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9l_StringTie": "PSIsigma1d9l" 
+println db_name
+"""
+if [ -e "${custom_gtf}" ]; then
+    gtfPath="${custom_gtf} "
+elif [ -e "${params.gtf}" ]; then
+    gtfPath="${params.gtf} "
+fi
+echo "gtf path: \${gtfPath}"
+# 0. Create groupa.txt and groupb.txt files
+total=\$(ls *.SJ.out.tab|wc -l)
+counta=\$(printf "%.0f" \$((\$total/2)))
+countb=\$((total-counta))
+ls *.SJ.out.tab|sed 's/.SJ.out.tab//'|head -n \$counta > groupa.txt
+ls *.SJ.out.tab|sed 's/.SJ.out.tab//'|tail -n \$countb > groupb.txt
+perl ${params.PSIsigma_db_path} \$gtfPath $chr_name 5 1 1
+"""
+}
+
+//* params.PSIsigma_db_path =  ""  //* @input
+//* params.gtf =  ""  //* @input
+
+process create_db_stringtie {
+
+input:
+ file bam from g_18_bam_file_g_26.collect()
+ file bai from g_18_bam_index_g_26.collect()
+ file tab from g_18_tab_file_g_26.collect()
+ val chr_name from g_5_name_g_26.flatten()
+ val custom_gtf from g_20_gtfFilePath_g_26
+
+output:
+ file "*.txt"  into g_26_groups
+ file "*.tmp"  into g_26_tmp_file_g_8
+ val db_name  into g_26_db_name_g_8
+
+container "onuryukselen/psi_sigma_pipeline:2.0"
+
+script:
+custom_gtf = custom_gtf.toString()
+db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9l_StringTie": "PSIsigma1d9l" 
+println db_name
 """
 if [ -e "${custom_gtf}" ]; then
     gtfPath="${custom_gtf} "
@@ -195,8 +236,8 @@ publishDir params.outdir, overwrite: true, mode: 'copy',
 }
 
 input:
- file tmp from g_22_tmp_file_g_8.collect()
- val db_name from g_22_db_name_g_8.collect()
+ file tmp from g_26_tmp_file_g_8.collect()
+ val db_name from g_26_db_name_g_8.collect()
 
 output:
  file "${db_name}.bed"  into g_8_bed_file
@@ -209,6 +250,26 @@ cat *.db.tmp > ${db_name}.db
 cat *.bed.tmp > ${db_name}.bed
 """
 
+}
+
+//* params.PSIsigma_ir_path =  ""  //* @input
+
+process create_intronic_read {
+
+input:
+ file bam from g_18_bam_file_g_23
+ file bai from g_18_bam_index_g_23
+ file db from g_8_db_file_g_23
+
+output:
+ file "*.IR.out.tab"  into g_23_tab_file_g_24
+
+container "onuryukselen/psi_sigma_pipeline:2.0"
+
+script:
+"""
+perl ${params.PSIsigma_ir_path} $db $bam 1 
+"""
 }
 
 def downFile(path){
@@ -300,26 +361,6 @@ foreach my $groupName (keys %all_groups){
 print Dumper \\%all_groups;
 '''
 
-}
-
-//* params.PSIsigma_ir_path =  ""  //* @input
-
-process create_intronic_read {
-
-input:
- file bam from g_18_bam_file_g_23
- file bai from g_18_bam_index_g_23
- file db from g_8_db_file_g_23
-
-output:
- file "*.IR.out.tab"  into g_23_tab_file_g_24
-
-container "onuryukselen/psi_sigma_pipeline:2.0"
-
-script:
-"""
-perl ${params.PSIsigma_ir_path} $db $bam 1 
-"""
 }
 
 g_20_gtfFilePath_g_24= g_20_gtfFilePath_g_24.ifEmpty([""]) 
