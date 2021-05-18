@@ -91,8 +91,8 @@ if (!params.gtf){params.gtf = ""}
 
 Channel.fromPath(params.bam, type: 'any').map{ file -> tuple(file.baseName, file) }.set{g_1_bam_file_g_18}
 Channel.fromPath(params.tab, type: 'any').map{ file -> tuple(file.baseName, file) }.set{g_2_outputFileTab_g_18}
-Channel.value(params.custom_gtf).into{g_20_gtfFilePath_g_26;g_20_gtfFilePath_g_46}
-Channel.value(params.gtf).into{g_28_gtfFilePath_g_27;g_28_gtfFilePath_g_47}
+Channel.value(params.custom_gtf).into{g_20_gtfFilePath_g_26;g_20_gtfFilePath_g_59;g_20_gtfFilePath_g_64}
+Channel.value(params.gtf).into{g_28_gtfFilePath_g_27;g_28_gtfFilePath_g_60;g_28_gtfFilePath_g_65}
 
 
 process rename {
@@ -102,9 +102,9 @@ input:
  set val(name_tab), file(tab) from g_2_outputFileTab_g_18
 
 output:
- file "*.bam"  into g_18_bam_file_g_26, g_18_bam_file_g_27, g_18_bam_file_g_44, g_18_bam_file_g_45, g_18_bam_file_g_46, g_18_bam_file_g_47
- file "*.bai"  into g_18_bam_index_g_26, g_18_bam_index_g_27, g_18_bam_index_g_44, g_18_bam_index_g_45, g_18_bam_index_g_46, g_18_bam_index_g_47
- file "*.tab"  into g_18_tab_file_g_26, g_18_tab_file_g_27, g_18_tab_file_g_46, g_18_tab_file_g_47
+ file "*.bam"  into g_18_bam_file_g_26, g_18_bam_file_g_27, g_18_bam_file_g_44, g_18_bam_file_g_45, g_18_bam_file_g_59, g_18_bam_file_g_60
+ file "*.bai"  into g_18_bam_index_g_26, g_18_bam_index_g_27, g_18_bam_index_g_44, g_18_bam_index_g_45, g_18_bam_index_g_59, g_18_bam_index_g_60
+ file "*.tab"  into g_18_tab_file_g_26, g_18_tab_file_g_27, g_18_tab_file_g_59, g_18_tab_file_g_60
 
 when:
 (params.run_PSI_Sigma && (params.run_PSI_Sigma == "yes")) || !params.run_PSI_Sigma
@@ -131,14 +131,16 @@ process PSI_Sigma_prep {
 
 
 output:
- val chromosome_list  into g_40_name_g_26, g_40_name_g_27
- val PSI_sigma_parameters  into g_40_parameters_g_46, g_40_parameters_g_47
+ val chromosome_list  into g_63_name_g_26, g_63_name_g_27
+ val PSI_sigma_parameters  into g_63_parameters_g_59, g_63_parameters_g_60
+ val gct_parameters  into g_63_gct_parameters_g_64, g_63_gct_parameters_g_65
 
 when:
 (params.run_PSI_Sigma && (params.run_PSI_Sigma == "yes")) || !params.run_PSI_Sigma
 
 script:
 PSI_sigma_parameters = params.PSI_Sigma_prep.PSI_sigma_parameters
+gct_parameters = params.PSI_Sigma_prep.gct_parameters
 chromosome_list = params.PSI_Sigma_prep.chromosome_list
 chromosome_list = chromosome_list.split(',')
 chromosome_list*.trim()
@@ -157,7 +159,7 @@ input:
  file bam from g_18_bam_file_g_27.collect()
  file bai from g_18_bam_index_g_27.collect()
  file tab from g_18_tab_file_g_27.collect()
- val chr_name from g_40_name_g_27.flatten()
+ val chr_name from g_63_name_g_27.flatten()
  val custom_gtf from g_28_gtfFilePath_g_27
 
 output:
@@ -171,11 +173,8 @@ when:
 custom_gtf.toString().indexOf("/") > -1
 
 script:
-println custom_gtf.toString().indexOf("/") > -1
-println custom_gtf
 custom_gtf = custom_gtf.toString()
 db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9l_StringTie": "PSIsigma1d9l" 
-println db_name
 """
 if [ -e "${custom_gtf}" ]; then
     gtfPath="${custom_gtf} "
@@ -208,7 +207,7 @@ input:
 
 output:
  file "${db_name}.bed"  into g_29_bed_file
- file "${db_name}.db"  into g_29_db_file_g_45, g_29_db_file_g_47
+ file "${db_name}.db"  into g_29_db_file_g_45, g_29_db_file_g_60, g_29_db_file_g_65
 
 script:
 db_name = db_name[0]
@@ -229,7 +228,7 @@ input:
  file db from g_29_db_file_g_45
 
 output:
- file "*.IR.out.tab"  into g_45_tab_file_g_47
+ file "*.IR.out.tab"  into g_45_tab_file_g_60
 
 container "onuryukselen/psi_sigma_pipeline:3.0"
 
@@ -248,7 +247,7 @@ input:
  file bam from g_18_bam_file_g_26.collect()
  file bai from g_18_bam_index_g_26.collect()
  file tab from g_18_tab_file_g_26.collect()
- val chr_name from g_40_name_g_26.flatten()
+ val chr_name from g_63_name_g_26.flatten()
  val custom_gtf from g_20_gtfFilePath_g_26
 
 output:
@@ -262,11 +261,8 @@ when:
 custom_gtf.toString().indexOf("/") > -1
 
 script:
-println custom_gtf.toString().indexOf("/") > -1
-println custom_gtf
 custom_gtf = custom_gtf.toString()
 db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9l_StringTie": "PSIsigma1d9l" 
-println db_name
 """
 if [ -e "${custom_gtf}" ]; then
     gtfPath="${custom_gtf} "
@@ -299,7 +295,7 @@ input:
 
 output:
  file "${db_name}.bed"  into g_8_bed_file
- file "${db_name}.db"  into g_8_db_file_g_44, g_8_db_file_g_46
+ file "${db_name}.db"  into g_8_db_file_g_44, g_8_db_file_g_59, g_8_db_file_g_64
 
 script:
 db_name = db_name[0]
@@ -308,6 +304,26 @@ cat *.db.tmp > ${db_name}.db
 cat *.bed.tmp > ${db_name}.bed
 """
 
+}
+
+//* params.PSIsigma_ir_path =  ""  //* @input
+
+process create_intronic_read {
+
+input:
+ file bam from g_18_bam_file_g_44
+ file bai from g_18_bam_index_g_44
+ file db from g_8_db_file_g_44
+
+output:
+ file "*.IR.out.tab"  into g_44_tab_file_g_59
+
+container "onuryukselen/psi_sigma_pipeline:3.0"
+
+script:
+"""
+perl ${params.PSIsigma_ir_path} $db $bam 1 
+"""
 }
 
 def downFile(path){
@@ -325,7 +341,8 @@ process prepare_groups {
 
 
 output:
- file "*"  into g_10_all_groups_g_46, g_10_all_groups_g_47
+ file "*"  into g_54_all_groups_g_59, g_54_all_groups_g_60
+ val all_groups_path  into g_54_all_groups_path_g_64, g_54_all_groups_path_g_65
 
 // # DMSO_1	A0	DMSO
 // # DMSO_2	A0	DMSO
@@ -401,7 +418,7 @@ print Dumper \\%all_groups;
 
 }
 
-g_28_gtfFilePath_g_47= g_28_gtfFilePath_g_47.ifEmpty([""]) 
+g_28_gtfFilePath_g_60= g_28_gtfFilePath_g_60.ifEmpty([""]) 
 
 //* params.dummyai_path =  ""  //* @input
 //* params.gtf =  ""  //* @input
@@ -410,21 +427,21 @@ process PSI_Sigma_run {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /.*$/) "PSIsigma/$filename"
+	if (filename =~ /${realcond}$/) "PSIsigma/$filename"
 }
 
 input:
- file cond from g_10_all_groups_g_47.flatten()
- file ir_out_tab from g_45_tab_file_g_47.collect()
- file out_tab from g_18_tab_file_g_47.collect()
- file bam from g_18_bam_file_g_47.collect()
- file bai from g_18_bam_index_g_47.collect()
- val custom_gtf from g_28_gtfFilePath_g_47
- file db from g_29_db_file_g_47
- val PSI_sigma_parameters from g_40_parameters_g_47
+ file cond from g_54_all_groups_g_60.flatten()
+ file ir_out_tab from g_45_tab_file_g_60.collect()
+ file out_tab from g_18_tab_file_g_60.collect()
+ file bam from g_18_bam_file_g_60.collect()
+ file bai from g_18_bam_index_g_60.collect()
+ val custom_gtf from g_28_gtfFilePath_g_60
+ file db from g_29_db_file_g_60
+ val PSI_sigma_parameters from g_63_parameters_g_60
 
 output:
- file "*"  into g_47_outputDir
+ file "${realcond}"  into g_60_outputDir_g_65
 
 container "onuryukselen/psi_sigma_pipeline:3.0"
 
@@ -434,6 +451,7 @@ custom_gtf = custom_gtf.toString()
 nameCustomGtf = custom_gtf.substring(custom_gtf.lastIndexOf('/')+1,custom_gtf.length())
 nameMainGtf = mainGtf.substring(mainGtf.lastIndexOf('/')+1,mainGtf.length())
 dbName = db.baseName
+realcond = cond.toString() - '_conds_' 
 """
 if [ -e "${custom_gtf}" ]; then
 	cp ${custom_gtf} ${nameCustomGtf}
@@ -468,27 +486,39 @@ rm $bam $bai \$gtfFile $db
 """
 }
 
-//* params.PSIsigma_ir_path =  ""  //* @input
 
-process create_intronic_read {
+process generate_gct {
 
 input:
- file bam from g_18_bam_file_g_44
- file bai from g_18_bam_index_g_44
- file db from g_8_db_file_g_44
+ file psi_sigma from g_60_outputDir_g_65
+ val all_groups from g_54_all_groups_path_g_65
+ val custom_gtf from g_28_gtfFilePath_g_65
+ file db_file from g_29_db_file_g_65
+ val gct_parameters from g_63_gct_parameters_g_65
 
-output:
- file "*.IR.out.tab"  into g_44_tab_file_g_46
-
-container "onuryukselen/psi_sigma_pipeline:3.0"
 
 script:
+gct_parameters.split()
+println gct_parameters[0]
+dPSI=gct_parameters.split()[0]
+adjp=gct_parameters.split()[1]
+nread=gct_parameters.split()[2]
+direction=gct_parameters.split()[3]
+suffix="PSIsigma1d9l"
+dbgtf = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? custom_gtf : params.gtf
+println dbgtf
+// /home/share/tools/DolphinNext/rnaseq/src/
 """
-perl ${params.PSIsigma_ir_path} $db $bam 1 
+mv $db_file ${psi_sigma}/.
+cd ${psi_sigma}
+perl /project/umw_garberlab/yukseleo/skyhawk/gct_v5.1.pl $all_groups ${params.gtf} $dbgtf ${suffix}.db $suffix $nread $dPSI $adjp $direction
+perl /project/umw_garberlab/yukseleo/skyhawk/gct2fasta_v2.pl ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 inclusion 20 0.05
+perl /project/umw_garberlab/yukseleo/skyhawk/gct2fasta_v2.pl ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 exclusion 20 0.05
+
 """
 }
 
-g_20_gtfFilePath_g_46= g_20_gtfFilePath_g_46.ifEmpty([""]) 
+g_20_gtfFilePath_g_59= g_20_gtfFilePath_g_59.ifEmpty([""]) 
 
 //* params.dummyai_path =  ""  //* @input
 //* params.gtf =  ""  //* @input
@@ -497,21 +527,21 @@ process PSI_Sigma_run_stringtie {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /.*$/) "PSIsigma_StringTie/$filename"
+	if (filename =~ /${realcond}$/) "PSIsigma_StringTie/$filename"
 }
 
 input:
- file cond from g_10_all_groups_g_46.flatten()
- file ir_out_tab from g_44_tab_file_g_46.collect()
- file out_tab from g_18_tab_file_g_46.collect()
- file bam from g_18_bam_file_g_46.collect()
- file bai from g_18_bam_index_g_46.collect()
- val custom_gtf from g_20_gtfFilePath_g_46
- file db from g_8_db_file_g_46
- val PSI_sigma_parameters from g_40_parameters_g_46
+ file cond from g_54_all_groups_g_59.flatten()
+ file ir_out_tab from g_44_tab_file_g_59.collect()
+ file out_tab from g_18_tab_file_g_59.collect()
+ file bam from g_18_bam_file_g_59.collect()
+ file bai from g_18_bam_index_g_59.collect()
+ val custom_gtf from g_20_gtfFilePath_g_59
+ file db from g_8_db_file_g_59
+ val PSI_sigma_parameters from g_63_parameters_g_59
 
 output:
- file "*"  into g_46_outputDir
+ file "${realcond}"  into g_59_outputDir_g_64
 
 container "onuryukselen/psi_sigma_pipeline:3.0"
 
@@ -521,6 +551,7 @@ custom_gtf = custom_gtf.toString()
 nameCustomGtf = custom_gtf.substring(custom_gtf.lastIndexOf('/')+1,custom_gtf.length())
 nameMainGtf = mainGtf.substring(mainGtf.lastIndexOf('/')+1,mainGtf.length())
 dbName = db.baseName
+realcond = cond.toString() - '_conds_' 
 """
 if [ -e "${custom_gtf}" ]; then
 	cp ${custom_gtf} ${nameCustomGtf}
@@ -552,6 +583,38 @@ tmpdir="${baseDir}/work"
 export TMPDIR=\$tmpdir
 perl ${params.dummyai_path} --gtf \$gtfFile  --name ${dbName} ${PSI_sigma_parameters} > log.txt 2>&1
 rm $bam $bai \$gtfFile $db
+"""
+}
+
+
+process generate_gct {
+
+input:
+ file psi_sigma from g_59_outputDir_g_64
+ val all_groups from g_54_all_groups_path_g_64
+ val custom_gtf from g_20_gtfFilePath_g_64
+ file db_file from g_8_db_file_g_64
+ val gct_parameters from g_63_gct_parameters_g_64
+
+
+script:
+gct_parameters.split()
+println gct_parameters[0]
+dPSI=gct_parameters.split()[0]
+adjp=gct_parameters.split()[1]
+nread=gct_parameters.split()[2]
+direction=gct_parameters.split()[3]
+suffix="PSIsigma1d9l"
+dbgtf = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? custom_gtf : params.gtf
+println dbgtf
+// /home/share/tools/DolphinNext/rnaseq/src/
+"""
+mv $db_file ${psi_sigma}/.
+cd ${psi_sigma}
+perl /project/umw_garberlab/yukseleo/skyhawk/gct_v5.1.pl $all_groups ${params.gtf} $dbgtf ${suffix}.db $suffix $nread $dPSI $adjp $direction
+perl /project/umw_garberlab/yukseleo/skyhawk/gct2fasta_v2.pl ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 inclusion 20 0.05
+perl /project/umw_garberlab/yukseleo/skyhawk/gct2fasta_v2.pl ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 exclusion 20 0.05
+
 """
 }
 
