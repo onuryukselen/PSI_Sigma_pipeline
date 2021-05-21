@@ -29,11 +29,6 @@ RUN apt-get -y install r-base
 RUN R -e "install.packages('BiocManager')"
 RUN R -e "BiocManager::install('qvalue')"
 
-COPY environment.yml /
-RUN conda env create -f /environment.yml && conda clean -a
-RUN mkdir -p /project /nl /mnt /share
-ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-3.0/bin:$PATH
-
 # Install PSI-Sigma
 RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9l.tar.gz && \
     tar -xzf v1.9l.tar.gz && mv PSI-Sigma-1.9l /usr/local/bin/PSI-Sigma-1.9l
@@ -67,13 +62,7 @@ RUN cpanm Statistics::Multtest
 RUN cpanm Statistics::R	
 
  
-# Install memesuite
-RUN wget https://meme-suite.org/meme/meme-software/5.3.3/meme-5.3.3.tar.gz && \ 
-    tar zxf meme-5.3.3.tar.gz && \
-    cd meme-5.3.3 && \
-    ./configure --prefix=/usr/local/bin/meme --enable-build-libxml2 --enable-build-libxslt && \
-    make && \ 
-    make test && \
-    make install
-ENV PATH /usr/local/bin/meme/bin:$PATH
-ENV PATH /usr/local/bin/meme/libexec/meme-5.3.3:$PATH
+COPY environment.yml /
+RUN conda env create -f /environment.yml && conda clean -a
+RUN mkdir -p /project /nl /mnt /share
+ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-3.0/bin:$PATH
