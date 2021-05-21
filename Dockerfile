@@ -65,3 +65,15 @@ RUN cpanm PDL::GSL::CDF
 RUN cpanm PDL::Stats	
 RUN cpanm Statistics::Multtest	
 RUN cpanm Statistics::R	
+
+ 
+# Install memesuite
+RUN wget https://meme-suite.org/meme/meme-software/5.3.3/meme-5.3.3.tar.gz && \ 
+    tar zxf meme-5.3.3.tar.gz && \
+    cd meme-5.3.3 && \
+    ./configure --prefix=/usr/local/bin/meme --enable-build-libxml2 --enable-build-libxslt && \
+    make && \ 
+    make test && \
+    make install
+ENV PATH /usr/local/bin/meme/bin:$PATH
+ENV PATH /usr/local/bin/meme/libexec/meme-5.3.3:$PATH
