@@ -489,7 +489,7 @@ process generate_gct {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /.*_summary.*$/) "PSI_sigma_alone/$filename"
+	if (filename =~ /.*$/) "PSI_sigma_alone/$filename"
 }
 
 input:
@@ -501,7 +501,7 @@ input:
 
 output:
  val "yes"  into g_114_run_process_g_110
- file "*_summary*"  into g_114_outputDir_g_110, g_114_outputDir_g_112
+ file "*"  into g_114_outputDir_g_110, g_114_outputDir_g_112
  val suffix  into g_114_suffix_g_112
 
 script:
@@ -521,9 +521,11 @@ if [ "${gtfName}" != "${dbgtfName}" ]; then
 	ln -s ${custom_gtf} $dbgtfName
 fi
 ln -s $all_groups $all_groupsName
-# mv $db_file ${psi_sigma}/.
 perl /home/share/tools/DolphinNext/rnaseq/src/gct_v5.1.pl $all_groupsName ${gtfName} $dbgtfName ${suffix}.db $suffix $nread $dPSI $adjp $direction
-
+rm $all_groupsName $gtfName
+if [ "${gtfName}" != "${dbgtfName}" ]; then
+	rm $dbgtfName
+fi
 """
 }
 
@@ -542,6 +544,8 @@ input:
 
 output:
  file "*"  into g_112_outputDir_g_110
+
+container "dolphinnext/psi_sigma_pipeline:3.0"
 
 script:
 nread=gct_parameters.split()[0]
@@ -768,7 +772,7 @@ process generate_gct_stringtie {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /.*_summary.*$/) "PSI_Sigma/$filename"
+	if (filename =~ /.*$/) "PSI_Sigma/$filename"
 }
 
 input:
@@ -780,7 +784,7 @@ input:
 
 output:
  val "yes"  into g_113_run_process_g_109
- file "*_summary*"  into g_113_outputDir_g_109, g_113_outputDir_g_111
+ file "*"  into g_113_outputDir_g_109, g_113_outputDir_g_111
  val suffix  into g_113_suffix_g_111
 
 script:
@@ -800,9 +804,11 @@ if [ "${gtfName}" != "${dbgtfName}" ]; then
 	ln -s ${custom_gtf} $dbgtfName
 fi
 ln -s $all_groups $all_groupsName
-# mv $db_file ${psi_sigma}/.
 perl /home/share/tools/DolphinNext/rnaseq/src/gct_v5.1.pl $all_groupsName ${gtfName} $dbgtfName ${suffix}.db $suffix $nread $dPSI $adjp $direction
-
+rm $all_groupsName $gtfName
+if [ "${gtfName}" != "${dbgtfName}" ]; then
+	rm $dbgtfName
+fi
 """
 }
 
@@ -821,6 +827,8 @@ input:
 
 output:
  file "*"  into g_111_outputDir_g_109
+
+container "dolphinnext/psi_sigma_pipeline:3.0"
 
 script:
 nread=gct_parameters.split()[0]
