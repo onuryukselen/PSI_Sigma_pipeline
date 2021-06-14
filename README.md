@@ -3,4 +3,4 @@ Percent Spliced-In (PSI) values are commonly used to report alternative pre-mRNA
 Github Repository: https://github.com/wososa/PSI-Sigma
 
 Software Versions:
-  * PSI-Sigma-v1.9l
+  * PSI-Sigma-v1.9m
