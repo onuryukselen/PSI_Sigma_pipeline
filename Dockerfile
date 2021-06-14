@@ -68,6 +68,7 @@ RUN cpanm Statistics::Multtest
 RUN cpanm Statistics::R	
 
 # Install MEME
+RUN apt-get install -y autoconf automake libtool ghostscript
 RUN mkdir /opt/meme
 ADD http://meme-suite.org/meme-software/5.3.3/meme-5.3.3.tar.gz /opt/meme
 WORKDIR /opt/meme/

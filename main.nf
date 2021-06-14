@@ -75,9 +75,9 @@ if ($HOSTNAME){
     params.samtools_path = "samtools"
     params.pdfbox_path = "/usr/local/bin/dolphin-tools/pdfbox-app-2.0.0-RC2.jar"
     params.gtf2bed_path = "/usr/local/bin/dolphin-tools/gtf2bed"
-    params.PSIsigma_db_path = "/usr/local/bin/PSI-Sigma-1.9l/PSIsigma-db-v.1.0.pl"
-    params.PSIsigma_ir_path = "/usr/local/bin/PSI-Sigma-1.9l/PSIsigma-ir-v.1.2.pl"
-    params.dummyai_path = "/usr/local/bin/PSI-Sigma-1.9l/dummyai.pl"
+    params.PSIsigma_db_path = "/usr/local/bin/PSI-Sigma-1.9m/PSIsigma-db-v.1.0.pl"
+    params.PSIsigma_ir_path = "/usr/local/bin/PSI-Sigma-1.9m/PSIsigma-ir-v.1.2.pl"
+    params.dummyai_path = "/usr/local/bin/PSI-Sigma-1.9m/dummyai.pl"
     $CPU  = 1
     $MEMORY = 10
 }
@@ -348,7 +348,7 @@ custom_gtf.toString().indexOf("/") > -1
 
 script:
 custom_gtf = custom_gtf.toString()
-db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9l_StringTie": "PSIsigma1d9l" 
+db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9m_StringTie": "PSIsigma1d9m" 
 """
 if [ -e "${custom_gtf}" ]; then
     gtfPath="${custom_gtf} "
@@ -503,6 +503,7 @@ output:
  val "yes"  into g_114_run_process_g_110
  file "*"  into g_114_outputDir_g_110, g_114_outputDir_g_112
  val suffix  into g_114_suffix_g_112
+ file "*/*.sorted.annotated.txt" optional true  into g_114_outputFileTxt
 
 script:
 nread=gct_parameters.split()[0]
@@ -631,7 +632,7 @@ custom_gtf.toString().indexOf("/") > -1
 
 script:
 custom_gtf = custom_gtf.toString()
-db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9l_StringTie": "PSIsigma1d9l" 
+db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9m_StringTie": "PSIsigma1d9m" 
 """
 if [ -e "${custom_gtf}" ]; then
     gtfPath="${custom_gtf} "
@@ -773,6 +774,7 @@ process generate_gct_stringtie {
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
 	if (filename =~ /.*$/) "PSI_Sigma/$filename"
+	else if (filename =~ /.*\/.*.sorted.annotated.txt$/) "PSI_Sigma/$filename"
 }
 
 input:
@@ -786,6 +788,7 @@ output:
  val "yes"  into g_113_run_process_g_109
  file "*"  into g_113_outputDir_g_109, g_113_outputDir_g_111
  val suffix  into g_113_suffix_g_111
+ file "*/*.sorted.annotated.txt" optional true  into g_113_outputFileTxt
 
 script:
 nread=gct_parameters.split()[0]
