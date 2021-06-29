@@ -36,9 +36,9 @@ RUN mkdir -p /project /nl /mnt /share
 ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-3.0/bin:$PATH
 
 # Install PSI-Sigma
-RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9l.tar.gz && \
-    tar -xzf v1.9l.tar.gz && mv PSI-Sigma-1.9l /usr/local/bin/PSI-Sigma-1.9l
-ENV PATH /usr/local/bin/PSI-Sigma-1.9l:$PATH
+RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9n.tar.gz && \
+    tar -xzf v1.9n.tar.gz && mv PSI-Sigma-1.9n /usr/local/bin/PSI-Sigma-1.9n
+ENV PATH /usr/local/bin/PSI-Sigma-1.9n:$PATH
 
 # Install compiler and perl stuff
 RUN apt-get install --yes \
@@ -68,6 +68,7 @@ RUN cpanm Statistics::Multtest
 RUN cpanm Statistics::R	
 
 # Install MEME
+RUN apt-get install -y autoconf automake libtool ghostscript
 RUN mkdir /opt/meme
 ADD http://meme-suite.org/meme-software/5.3.3/meme-5.3.3.tar.gz /opt/meme
 WORKDIR /opt/meme/
