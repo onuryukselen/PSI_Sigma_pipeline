@@ -36,9 +36,9 @@ RUN mkdir -p /project /nl /mnt /share
 ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-3.0/bin:$PATH
 
 # Install PSI-Sigma
-RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9m.tar.gz && \
-    tar -xzf v1.9m.tar.gz && mv PSI-Sigma-1.9m /usr/local/bin/PSI-Sigma-1.9m
-ENV PATH /usr/local/bin/PSI-Sigma-1.9m:$PATH
+RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9n.tar.gz && \
+    tar -xzf v1.9n.tar.gz && mv PSI-Sigma-1.9n /usr/local/bin/PSI-Sigma-1.9n
+ENV PATH /usr/local/bin/PSI-Sigma-1.9n:$PATH
 
 # Install compiler and perl stuff
 RUN apt-get install --yes \

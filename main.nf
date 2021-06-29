@@ -78,6 +78,11 @@ if ($HOSTNAME){
     params.PSIsigma_db_path = "/usr/local/bin/PSI-Sigma-1.9m/PSIsigma-db-v.1.0.pl"
     params.PSIsigma_ir_path = "/usr/local/bin/PSI-Sigma-1.9m/PSIsigma-ir-v.1.2.pl"
     params.dummyai_path = "/usr/local/bin/PSI-Sigma-1.9m/dummyai.pl"
+    params.gct_script_path = "/home/share/tools/DolphinNext/rnaseq/src/gct_v5.1.pl"
+    params.gct2fasta_path = "/home/share/tools/DolphinNext/rnaseq/src/gct2fasta_v2.pl"
+    params.gene_script_path = "/home/share/tools/DolphinNext/rnaseq/src/gene_v1.pl"
+	params.cluster_script_path = "/home/share/tools/DolphinNext/rnaseq/src/cluster_v1.pl" 
+	params.psi_sigma_version = "1d9m"
     $CPU  = 1
     $MEMORY = 10
 }
@@ -326,6 +331,7 @@ echo ${chromosome_list}
 
 //* params.PSIsigma_db_path =  ""  //* @input
 //* params.gtf =  ""  //* @input
+//* params.psi_sigma_version =  ""  //* @input
 
 process create_db {
 
@@ -348,7 +354,7 @@ custom_gtf.toString().indexOf("/") > -1
 
 script:
 custom_gtf = custom_gtf.toString()
-db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9m_StringTie": "PSIsigma1d9m" 
+db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma${params.psi_sigma_version}_StringTie": "PSIsigma${params.psi_sigma_version}" 
 """
 if [ -e "${custom_gtf}" ]; then
     gtfPath="${custom_gtf} "
@@ -412,7 +418,7 @@ perl ${params.PSIsigma_ir_path} $db $bam 1
 """
 }
 
-g_28_gtfFilePath_g_60= g_28_gtfFilePath_g_60.ifEmpty([""]) 
+g_28_gtfFilePath_g_60= g_28_gtfFilePath_g_60.ifEmpty("") 
 
 //* params.dummyai_path =  ""  //* @input
 //* params.gtf =  ""  //* @input
@@ -484,6 +490,7 @@ rm $bam $bai \$gtfFile ${realDBname}.db
 """
 }
 
+//* params.gct_script_path =  ""  //* @input
 
 process generate_gct {
 
@@ -522,20 +529,23 @@ if [ "${gtfName}" != "${dbgtfName}" ]; then
 	ln -s ${custom_gtf} $dbgtfName
 fi
 ln -s $all_groups $all_groupsName
-perl /home/share/tools/DolphinNext/rnaseq/src/gct_v5.1.pl $all_groupsName ${gtfName} $dbgtfName ${suffix}.db $suffix $nread $dPSI $adjp $direction
-rm $all_groupsName $gtfName
+perl ${params.gct_script_path} $all_groupsName ${gtfName} $dbgtfName ${suffix}.db $suffix $nread $dPSI $adjp $direction
+rm  $gtfName
 if [ "${gtfName}" != "${dbgtfName}" ]; then
 	rm $dbgtfName
 fi
 """
 }
 
+//* params.gct2fasta_path =  ""  //* @input
 
 process generate_sequence_logos {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /.*$/) "PSI_sigma_alone/$filename"
+	if (filename =~ /.*_inclusion_.*\/.*\/.*.png$/) "PSI_sigma_alone_inclusion_images/$filename"
+	else if (filename =~ /.*_exclusion_.*\/.*\/.*.png$/) "PSI_sigma_alone_exclusion_images/$filename"
+	else if (filename =~ /.*$/) "PSI_sigma_alone/$filename"
 }
 
 input:
@@ -544,6 +554,8 @@ input:
  val suffix from g_114_suffix_g_112
 
 output:
+ file "*_inclusion_*/*/*.png"  into g_112_inclusion_images
+ file "*_exclusion_*/*/*.png"  into g_112_exclusion_images
  file "*"  into g_112_outputDir_g_110
 
 container "dolphinnext/psi_sigma_pipeline:3.0"
@@ -555,12 +567,24 @@ adjp=gct_parameters.split()[2]
 direction=gct_parameters.split()[3]
 
 """
-perl /home/share/tools/DolphinNext/rnaseq/src/gct2fasta_v2.pl ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 inclusion ${dPSI} ${adjp}
-perl /home/share/tools/DolphinNext/rnaseq/src/gct2fasta_v2.pl ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 exclusion ${dPSI} ${adjp}
-
+perl ${params.gct2fasta_path} ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 inclusion ${dPSI} ${adjp}
+perl ${params.gct2fasta_path} ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 exclusion ${dPSI} ${adjp}
+cd *_inclusion_*
+for f in */*.png; do
+    b="\${f##*/}";
+    mv "\$f" "\${f%/*}/\${f%/*}_\${b}"
+done
+cd ..
+cd *_exclusion_*
+for f in */*.png; do
+    b="\${f##*/}";
+    mv "\$f" "\${f%/*}/\${f%/*}_\${b}"
+done
 """
 }
 
+//* params.gene_script_path =  ""  //* @input
+//* params.cluster_script_path =  ""  //* @input
 
 process generate_gene_and_cluster_tables {
 
@@ -589,8 +613,8 @@ find ../*/* -name '*ir3.${suffix}' -exec ln -s {} . \\;
 dPSI=0
 cp="0.05"
 for fn in `ls *ir3.${suffix}`; do
-	perl /home/share/tools/DolphinNext/rnaseq/src/gene_v1.pl \$fn \$dPSI \$cp 3
-	perl /home/share/tools/DolphinNext/rnaseq/src/cluster_v1.pl \$fn \$dPSI \$cp 3
+	perl ${params.gene_script_path} \$fn \$dPSI \$cp 3
+	perl ${params.cluster_script_path} \$fn \$dPSI \$cp 3
 done
 tar zcvf gene_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz gene.table.dPSI\$dPSI.adjp\$cp.*
 tar zcvf cluster_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz cluster.table.dPSI\$dPSI.adjp\$cp.*
@@ -598,8 +622,8 @@ tar zcvf cluster_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz cluster.table.dPSI\$
 dPSI=0
 cp="1"
 for fn in `ls *ir3.${suffix}`; do
-	perl /home/share/tools/DolphinNext/rnaseq/src/gene_v1.pl \$fn \$dPSI \$cp 3
-	perl /home/share/tools/DolphinNext/rnaseq/src/cluster_v1.pl \$fn \$dPSI \$cp 3
+	perl ${params.gene_script_path} \$fn \$dPSI \$cp 3
+	perl ${params.cluster_script_path} \$fn \$dPSI \$cp 3
 done
 tar zcvf gene_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz gene.table.dPSI\$dPSI.adjp\$cp.*
 tar zcvf cluster_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz cluster.table.dPSI\$dPSI.adjp\$cp.*
@@ -610,6 +634,7 @@ find -type l -exec rm {} \\;
 
 //* params.PSIsigma_db_path =  ""  //* @input
 //* params.gtf =  ""  //* @input
+//* params.psi_sigma_version =  ""  //* @input
 
 process create_db_stringtie {
 
@@ -632,7 +657,7 @@ custom_gtf.toString().indexOf("/") > -1
 
 script:
 custom_gtf = custom_gtf.toString()
-db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma1d9m_StringTie": "PSIsigma1d9m" 
+db_name = (custom_gtf.indexOf("StringTie.sorted.gtf") > -1) ? "PSIsigma${params.psi_sigma_version}_StringTie": "PSIsigma${params.psi_sigma_version}" 
 """
 if [ -e "${custom_gtf}" ]; then
     gtfPath="${custom_gtf} "
@@ -696,7 +721,7 @@ perl ${params.PSIsigma_ir_path} $db $bam 1
 """
 }
 
-g_20_gtfFilePath_g_59= g_20_gtfFilePath_g_59.ifEmpty([""]) 
+g_20_gtfFilePath_g_59= g_20_gtfFilePath_g_59.ifEmpty("") 
 
 //* params.dummyai_path =  ""  //* @input
 //* params.gtf =  ""  //* @input
@@ -768,6 +793,7 @@ rm $bam $bai \$gtfFile ${realDBname}.db
 """
 }
 
+//* params.gct_script_path =  ""  //* @input
 
 process generate_gct_stringtie {
 
@@ -807,20 +833,23 @@ if [ "${gtfName}" != "${dbgtfName}" ]; then
 	ln -s ${custom_gtf} $dbgtfName
 fi
 ln -s $all_groups $all_groupsName
-perl /home/share/tools/DolphinNext/rnaseq/src/gct_v5.1.pl $all_groupsName ${gtfName} $dbgtfName ${suffix}.db $suffix $nread $dPSI $adjp $direction
-rm $all_groupsName $gtfName
+perl ${params.gct_script_path} $all_groupsName ${gtfName} $dbgtfName ${suffix}.db $suffix $nread $dPSI $adjp $direction
+rm  $gtfName
 if [ "${gtfName}" != "${dbgtfName}" ]; then
 	rm $dbgtfName
 fi
 """
 }
 
+//* params.gct2fasta_path =  ""  //* @input
 
 process generate_sequence_logos_stringtie {
 
 publishDir params.outdir, overwrite: true, mode: 'copy',
 	saveAs: {filename ->
-	if (filename =~ /.*$/) "PSI_Sigma/$filename"
+	if (filename =~ /.*_inclusion_.*\/.*\/.*.png$/) "PSI_Sigma_inclusion_images/$filename"
+	else if (filename =~ /.*_exclusion_.*\/.*\/.*.png$/) "PSI_Sigma_exclusion_images/$filename"
+	else if (filename =~ /.*$/) "PSI_Sigma/$filename"
 }
 
 input:
@@ -829,6 +858,8 @@ input:
  val suffix from g_113_suffix_g_111
 
 output:
+ file "*_inclusion_*/*/*.png"  into g_111_inclusion_images
+ file "*_exclusion_*/*/*.png"  into g_111_exclusion_images
  file "*"  into g_111_outputDir_g_109
 
 container "dolphinnext/psi_sigma_pipeline:3.0"
@@ -840,12 +871,24 @@ adjp=gct_parameters.split()[2]
 direction=gct_parameters.split()[3]
 
 """
-perl /home/share/tools/DolphinNext/rnaseq/src/gct2fasta_v2.pl ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 inclusion ${dPSI} ${adjp}
-perl /home/share/tools/DolphinNext/rnaseq/src/gct2fasta_v2.pl ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 exclusion ${dPSI} ${adjp}
-
+perl ${params.gct2fasta_path} ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 inclusion ${dPSI} ${adjp}
+perl ${params.gct2fasta_path} ${params.genome} ${params.gtf} ${suffix}_r${nread}_${direction}_dPSI${dPSI}_adjp${adjp}_summary 6 18 exclusion ${dPSI} ${adjp}
+cd *_inclusion_*
+for f in */*.png; do
+    b="\${f##*/}";
+    mv "\$f" "\${f%/*}/\${f%/*}_\${b}"
+done
+cd ..
+cd *_exclusion_*
+for f in */*.png; do
+    b="\${f##*/}";
+    mv "\$f" "\${f%/*}/\${f%/*}_\${b}"
+done
 """
 }
 
+//* params.gene_script_path =  ""  //* @input
+//* params.cluster_script_path =  ""  //* @input
 
 process generate_gene_and_cluster_tables_stringtie {
 
@@ -874,8 +917,8 @@ find ../*/* -name '*ir3.${suffix}' -exec ln -s {} . \\;
 dPSI=0
 cp="0.05"
 for fn in `ls *ir3.${suffix}`; do
-	perl /home/share/tools/DolphinNext/rnaseq/src/gene_v1.pl \$fn \$dPSI \$cp 3
-	perl /home/share/tools/DolphinNext/rnaseq/src/cluster_v1.pl \$fn \$dPSI \$cp 3
+	perl ${params.gene_script_path} \$fn \$dPSI \$cp 3
+	perl ${params.cluster_script_path} \$fn \$dPSI \$cp 3
 done
 tar zcvf gene_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz gene.table.dPSI\$dPSI.adjp\$cp.*
 tar zcvf cluster_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz cluster.table.dPSI\$dPSI.adjp\$cp.*
@@ -883,8 +926,8 @@ tar zcvf cluster_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz cluster.table.dPSI\$
 dPSI=0
 cp="1"
 for fn in `ls *ir3.${suffix}`; do
-	perl /home/share/tools/DolphinNext/rnaseq/src/gene_v1.pl \$fn \$dPSI \$cp 3
-	perl /home/share/tools/DolphinNext/rnaseq/src/cluster_v1.pl \$fn \$dPSI \$cp 3
+	perl ${params.gene_script_path} \$fn \$dPSI \$cp 3
+	perl ${params.cluster_script_path} \$fn \$dPSI \$cp 3
 done
 tar zcvf gene_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz gene.table.dPSI\$dPSI.adjp\$cp.*
 tar zcvf cluster_level${suffix2}.dPSI\$dPSI.adjp\$cp.tar.gz cluster.table.dPSI\$dPSI.adjp\$cp.*
