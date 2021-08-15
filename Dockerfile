@@ -33,12 +33,12 @@ RUN R -e "BiocManager::install('qvalue')"
 COPY environment.yml /
 RUN conda env create -f /environment.yml && conda clean -a
 RUN mkdir -p /project /nl /mnt /share
-ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-3.0/bin:$PATH
+ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-4.0/bin:$PATH
 
 # Install PSI-Sigma
-RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9n.tar.gz && \
-    tar -xzf v1.9n.tar.gz && mv PSI-Sigma-1.9n /usr/local/bin/PSI-Sigma-1.9n
-ENV PATH /usr/local/bin/PSI-Sigma-1.9n:$PATH
+RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9p.tar.gz && \
+    tar -xzf v1.9p.tar.gz && mv PSI-Sigma-1.9p /usr/local/bin/PSI-Sigma-1.9p
+ENV PATH /usr/local/bin/PSI-Sigma-1.9p:$PATH
 
 # Install compiler and perl stuff
 RUN apt-get install --yes \

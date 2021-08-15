@@ -75,14 +75,14 @@ if ($HOSTNAME){
     params.samtools_path = "samtools"
     params.pdfbox_path = "/usr/local/bin/dolphin-tools/pdfbox-app-2.0.0-RC2.jar"
     params.gtf2bed_path = "/usr/local/bin/dolphin-tools/gtf2bed"
-    params.PSIsigma_db_path = "/usr/local/bin/PSI-Sigma-1.9m/PSIsigma-db-v.1.0.pl"
-    params.PSIsigma_ir_path = "/usr/local/bin/PSI-Sigma-1.9m/PSIsigma-ir-v.1.2.pl"
-    params.dummyai_path = "/usr/local/bin/PSI-Sigma-1.9m/dummyai.pl"
-    params.gct_script_path = "/home/share/tools/DolphinNext/rnaseq/src/gct_v5.1.pl"
-    params.gct2fasta_path = "/home/share/tools/DolphinNext/rnaseq/src/gct2fasta_v2.pl"
-    params.gene_script_path = "/home/share/tools/DolphinNext/rnaseq/src/gene_v1.pl"
-	params.cluster_script_path = "/home/share/tools/DolphinNext/rnaseq/src/cluster_v1.pl" 
-	params.psi_sigma_version = "1d9m"
+    params.PSIsigma_db_path = "/usr/local/bin/PSI-Sigma-1.9n/PSIsigma-db-v.1.0.pl"
+    params.PSIsigma_ir_path = "/usr/local/bin/PSI-Sigma-1.9n/PSIsigma-ir-v.1.2.pl"
+    params.dummyai_path = "/usr/local/bin/PSI-Sigma-1.9n/dummyai.pl"
+    params.gct_script_path = "/home/share/tools/DolphinNext/rnaseq/src/gct_v5.2.pl"
+    params.gct2fasta_path = "/home/share/tools/DolphinNext/rnaseq/src/gct2fasta_v3.pl"
+    params.gene_script_path = "/home/share/tools/DolphinNext/rnaseq/src/gene_v1.1.pl"
+	params.cluster_script_path = "/home/share/tools/DolphinNext/rnaseq/src/cluster_v1.1.pl" 
+	params.psi_sigma_version = "1d9n"
     $CPU  = 1
     $MEMORY = 10
 }
@@ -554,8 +554,8 @@ input:
  val suffix from g_114_suffix_g_112
 
 output:
- file "*_inclusion_*/*/*.png"  into g_112_inclusion_images
- file "*_exclusion_*/*/*.png"  into g_112_exclusion_images
+ file "*_inclusion_*/*/*.png" optional true  into g_112_inclusion_images
+ file "*_exclusion_*/*/*.png" optional true  into g_112_exclusion_images
  file "*"  into g_112_outputDir_g_110
 
 container "dolphinnext/psi_sigma_pipeline:3.0"
@@ -858,8 +858,8 @@ input:
  val suffix from g_113_suffix_g_111
 
 output:
- file "*_inclusion_*/*/*.png"  into g_111_inclusion_images
- file "*_exclusion_*/*/*.png"  into g_111_exclusion_images
+ file "*_inclusion_*/*/*.png" optional true  into g_111_inclusion_images
+ file "*_exclusion_*/*/*.png" optional true  into g_111_exclusion_images
  file "*"  into g_111_outputDir_g_109
 
 container "dolphinnext/psi_sigma_pipeline:3.0"
