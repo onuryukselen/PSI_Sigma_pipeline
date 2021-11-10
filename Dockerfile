@@ -35,11 +35,6 @@ RUN conda env create -f /environment.yml && conda clean -a
 RUN mkdir -p /project /nl /mnt /share
 ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-4.0/bin:$PATH
 
-# Install PSI-Sigma
-RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9p.tar.gz && \
-    tar -xzf v1.9p.tar.gz && mv PSI-Sigma-1.9p /usr/local/bin/PSI-Sigma-1.9p
-ENV PATH /usr/local/bin/PSI-Sigma-1.9p:$PATH
-
 # Install compiler and perl stuff
 RUN apt-get install --yes \
  build-essential \
@@ -53,8 +48,6 @@ RUN apt-get install --yes \
 ENV PERL5LIB="/usr/local/lib/x86_64-linux-gnu/perl/5.22"
 # 1. Install cpanm
 RUN cpan App::cpanminus
-# RUN cpanm PDL::LiteF
-# RUN cpanm PDL::Stats
 
 # 2. Install GSL 
 RUN apt-get update && apt-get upgrade -y
@@ -78,5 +71,11 @@ RUN cd /opt/meme/meme-5.3.3 && \
         make && \
         make install && \
         rm -rfv /opt/meme
+
+# Install PSI-Sigma
+RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9p.tar.gz && \
+    tar -xzf v1.9p.tar.gz && mv PSI-Sigma-1.9p /usr/local/bin/PSI-Sigma-1.9p
+ENV PATH /usr/local/bin/PSI-Sigma-1.9p:$PATH
+
 ENV PATH="/opt/bin:${PATH}"
 
