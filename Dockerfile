@@ -76,5 +76,11 @@ RUN cd /opt/meme/meme-5.3.3 && \
         make && \
         make install && \
         rm -rfv /opt/meme
+
+# Install PSI-Sigma
+RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9p.tar.gz && \
+    tar -xzf v1.9p.tar.gz && mv PSI-Sigma-1.9p /usr/local/bin/PSI-Sigma-1.9p
+ENV PATH /usr/local/bin/PSI-Sigma-1.9p:$PATH
+
 ENV PATH="/opt/bin:${PATH}"
 
