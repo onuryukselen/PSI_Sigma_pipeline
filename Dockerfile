@@ -33,12 +33,7 @@ RUN R -e "BiocManager::install('qvalue')"
 COPY environment.yml /
 RUN conda env create -f /environment.yml && conda clean -a
 RUN mkdir -p /project /nl /mnt /share
-ENV PATH /opt/conda/envs/dolphinnext-PSI-Sigma-5.0/bin:$PATH
-
-# Install PSI-Sigma
-RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9r.tar.gz && \
-    tar -xzf v1.9r.tar.gz && mv PSI-Sigma-1.9r /usr/local/bin/PSI-Sigma-1.9r
-ENV PATH /usr/local/bin/PSI-Sigma-1.9r:$PATH
+ENV PATH /opt/conda/envs/dolphinnext/bin:$PATH
 
 # Install compiler and perl stuff
 RUN apt-get install --yes \
@@ -63,7 +58,7 @@ RUN cpanm PDL::LiteF
 RUN cpanm PDL::GSL::CDF	
 RUN cpanm PDL::Stats	
 RUN cpanm Statistics::Multtest	
-RUN cpanm Statistics::R	
+RUN cpanm Statistics::R	--force
 
 # Install MEME
 RUN apt-get install -y autoconf automake libtool ghostscript
@@ -78,9 +73,9 @@ RUN cd /opt/meme/meme-5.3.3 && \
         rm -rfv /opt/meme
 
 # Install PSI-Sigma
-RUN wget https://github.com/wososa/PSI-Sigma/archive/v1.9p.tar.gz && \
-    tar -xzf v1.9p.tar.gz && mv PSI-Sigma-1.9p /usr/local/bin/PSI-Sigma-1.9p
-ENV PATH /usr/local/bin/PSI-Sigma-1.9p:$PATH
+RUN wget https://github.com/wososa/PSI-Sigma/archive/v2.1.tar.gz && \
+    tar -xzf v2.1.tar.gz && mv PSI-Sigma-2.1 /usr/local/bin/PSI-Sigma-2.1
+ENV PATH /usr/local/bin/PSI-Sigma-2.1:$PATH
 
 ENV PATH="/opt/bin:${PATH}"
 
