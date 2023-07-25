@@ -1,0 +1,11 @@
+# You can use this file to create a conda environment for this pipeline:
+# conda env create -f environment.yml
+name: dolphinnext
+channels:
+   - conda-forge
+   - bioconda
+   - defaults
+dependencies:
+   - samtools=1.3
+   - bedtools=2.27.1
+   - openssl=1.0
