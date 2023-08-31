@@ -56,8 +56,8 @@ def parseArguments():
 	required = parser.add_argument_group('required arguments')
 	required.add_argument('-i', '--input', required=True, help='Input file [sample] [Code] [Name]', metavar='', dest='infile')
 	optional = parser.add_argument_group('optional arguments')
-	optional.add_argument('-g', '--groups-outfile',  default='groups.txt', help='Output name for groups file.', metavar='', dest='groups')
-	optional.add_argument('-c', '--comparisons-outfile', default='comparisons.txt', help='Output name for comparisons file.', metavar='', dest='comparisons')
+	optional.add_argument('-g', '--groups-outfile',  default='groups.tsv', help='Output name for groups file.', metavar='', dest='groups')
+	optional.add_argument('-c', '--comparisons-outfile', default='comparisons.tsv', help='Output name for comparisons file.', metavar='', dest='comparisons')
 
 	return parser.parse_args()
 
