@@ -1,0 +1,70 @@
+#!/usr/bin/python3
+
+import argparse
+from collections import defaultdict
+from openpyxl.utils.cell import get_column_letter
+
+def main(args):
+	
+	control_key, comparison_key = read_comparisons(args.comparisons)
+	sample_groups = read_groups(args.groups)
+	write_output(args.outfile, control_key, comparison_key, sample_groups)
+
+def write_output(output_file, control_key, comparison_key, sample_groups):
+
+	output = []
+
+	for comparison in comparison_key:
+		letter = control_key[comparison]
+
+		for sample in sample_groups[comparison]:
+			output.append('%s\t%s0\tNA' % (sample, letter))
+
+		for i, group in enumerate(comparison_key[comparison]):
+			for sample in sample_groups[group[0]]:
+				output.append('%s\t%s%s\t%s' % (sample, letter, i+1, group[1]))
+
+	with open(output_file, 'w') as out:
+		out.write('\n'.join(output))
+
+def read_comparisons(comparison_infile):
+
+	controls = set()
+	comparison_key = defaultdict(list)
+	with open(comparison_infile) as infile:
+		infile.readline()
+		for line in infile:
+			control, treatment, name = line.rstrip().split('\t')
+			controls.add(control)
+			comparison_key[control].append((treatment, name))
+	
+	control_key = {}
+	for i, sample in enumerate(list(controls)):
+		control_key[sample] = get_column_letter(i+1)
+
+	return(control_key, comparison_key)
+
+def read_groups(group_infile):
+
+	sample_groups = defaultdict(list)
+	with open(group_infile) as infile:
+		infile.readline()
+		for line in infile:
+			cur = line.rstrip().split('\t')
+			sample_groups[cur[1]].append(cur[0])
+	
+	return(sample_groups)
+
+def parseArguments():
+	parser = argparse.ArgumentParser(prog="Convert from groups and comparisons files into flat file.", description='', usage='%(prog)s [options]')
+	required = parser.add_argument_group('required arguments')
+	required.add_argument('-g', '--groups-outfile', required=True, help='Groups file.', metavar='', dest='groups')
+	required.add_argument('-c', '--comparisons-outfile', required=True, help='Comparisons file.', metavar='', dest='comparisons')
+	optional = parser.add_argument_group('optional arguments')
+	optional.add_argument('-o', '--output', default='groups.tsv', help='Output file.', metavar='', dest='outfile')
+
+	return parser.parse_args()
+
+if __name__ == "__main__":
+	args = parseArguments()
+	main(args)
