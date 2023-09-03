@@ -39,7 +39,7 @@ def write_groups_file(sample_key, columns, outfile):
 	final_columns = sorted(list(columns))
 	output = ['sample_name\t%s' % ('\t'.join(column for column in final_columns))]
 	for sample in sample_key:
-		output.append('%s\t%s' % (sample, '\t'.join([sample_key[sample][column] if len(sample_key[sample][column]) > 0 else 'NA' for column in final_columns])))
+		output.append('%s\t%s' % (sample, '\t'.join([sample_key[sample][column] if len(sample_key[sample][column]) > 0 else '' for column in final_columns])))
 	with open(outfile, 'w') as out:
 		out.write('\n'.join(output))
 
