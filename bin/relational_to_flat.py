@@ -10,23 +10,6 @@ def main(args):
 	sample_groups = read_groups(args.groups)
 	write_output(args.outfile, control_key, comparison_key, sample_groups)
 
-def write_output(output_file, control_key, comparison_key, sample_groups):
-
-	output = []
-
-	for comparison in comparison_key:
-		letter = control_key[comparison]
-
-		for sample in sample_groups[comparison]:
-			output.append('%s\t%s0\tNA' % (sample, letter))
-
-		for i, group in enumerate(comparison_key[comparison]):
-			for sample in sample_groups[group[0]]:
-				output.append('%s\t%s%s\t%s' % (sample, letter, i+1, group[1]))
-
-	with open(output_file, 'w') as out:
-		out.write('\n'.join(output))
-
 def read_comparisons(comparison_infile):
 
 	controls = set()
@@ -34,9 +17,14 @@ def read_comparisons(comparison_infile):
 	with open(comparison_infile) as infile:
 		infile.readline()
 		for line in infile:
-			control, treatment, name = line.rstrip().split('\t')
-			controls.add(control)
-			comparison_key[control].append((treatment, name))
+			cur = line.rstrip().split('\t')
+			if len(cur) == 3:
+				control, treatment, name = line.rstrip().split('\t')
+				column = 'group'
+			else:
+				control, treatment, name, column = line.rstrip().split('\t')
+			controls.add((control, column))
+			comparison_key[(control, column)].append((treatment, name, column))
 	
 	control_key = {}
 	for i, sample in enumerate(list(controls)):
@@ -48,12 +36,33 @@ def read_groups(group_infile):
 
 	sample_groups = defaultdict(list)
 	with open(group_infile) as infile:
-		infile.readline()
+		header = infile.readline().rstrip().split('\t')
 		for line in infile:
 			cur = line.rstrip().split('\t')
-			sample_groups[cur[1]].append(cur[0])
-	
+			for i, column in enumerate(header):
+
+				sample_groups[(cur[i], column)].append(cur[0])
 	return(sample_groups)
+
+def write_output(output_file, control_key, comparison_key, sample_groups):
+
+	output = []
+
+	for comparison in comparison_key:
+		letter = control_key[comparison]
+
+		print(sample_groups)
+		print(comparison)
+
+		for sample in sample_groups[comparison]:
+			output.append('%s\t%s0\t' % (sample, letter))
+
+		for i, group in enumerate(comparison_key[comparison]):
+			for sample in sample_groups[(group[0], group[2])]:
+				output.append('%s\t%s%s\t%s' % (sample, letter, i+1, group[1]))
+
+	with open(output_file, 'w') as out:
+		out.write('\n'.join(output))
 
 def parseArguments():
 	parser = argparse.ArgumentParser(prog="Convert from groups and comparisons files into flat file.", description='', usage='%(prog)s [options]')
