@@ -15,6 +15,9 @@ def parse_input(input_file):
 	columns = set()
 	names = {}
 	comparisons = defaultdict(set)
+	control_groups = defaultdict(set)
+	control_samples = defaultdict(list)
+
 
 	with open(input_file) as infile:
 		for line in infile:
@@ -26,12 +29,20 @@ def parse_input(input_file):
 			letter = re.findall('^[A-Z]+', code)[0]
 			number = re.findall('\d+$', code)[0]
 			
-			columns.add(letter)
-			sample_key[sample][letter] = number
 			names[code] = name
 
 			if number != '0':
-				comparisons[letter].add(number)
+				sample_key[sample][code] = number
+				columns.add(code)
+				comparisons[code].add(number)
+				control_groups[letter].add(number)
+			else:
+				control_samples[letter].append(sample)
+
+	for letter in control_groups:
+		for number in control_groups[letter]:
+			for sample in control_samples[letter]:
+				sample_key[sample]['%s%s' % (letter, number)] = '0'	
 
 	return sample_key, columns, names, comparisons
 
@@ -47,7 +58,7 @@ def write_comparisons_file(comparisons, names, outfile):
 	output = ['controls\ttreats\tnames\tcolumn']
 	for comparison_group in comparisons:
 		for i in comparisons[comparison_group]:
-			output.append('%s\t%s\t%s\t%s' % ('0', i, names['%s%s' % (comparison_group, i)], comparison_group))
+			output.append('%s\t%s\t%s\t%s' % ('0', i, names[comparison_group], comparison_group))
 	with open(outfile, 'w') as out:
 		out.write('\n'.join(output))
 
