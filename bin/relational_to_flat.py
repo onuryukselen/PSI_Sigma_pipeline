@@ -51,9 +51,6 @@ def write_output(output_file, control_key, comparison_key, sample_groups):
 	for comparison in comparison_key:
 		letter = control_key[comparison]
 
-		print(sample_groups)
-		print(comparison)
-
 		for sample in sample_groups[comparison]:
 			output.append('%s\t%s0\t' % (sample, letter))
 
