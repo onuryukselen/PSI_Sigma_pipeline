@@ -64,8 +64,8 @@ def write_output(output_file, control_key, comparison_key, sample_groups):
 def parseArguments():
 	parser = argparse.ArgumentParser(prog="Convert from groups and comparisons files into flat file.", description='', usage='%(prog)s [options]')
 	required = parser.add_argument_group('required arguments')
-	required.add_argument('-g', '--groups-outfile', required=True, help='Groups file.', metavar='', dest='groups')
-	required.add_argument('-c', '--comparisons-outfile', required=True, help='Comparisons file.', metavar='', dest='comparisons')
+	required.add_argument('-g', '--groups', required=True, help='Groups file.', metavar='', dest='groups')
+	required.add_argument('-c', '--comparisons', required=True, help='Comparisons file.', metavar='', dest='comparisons')
 	optional = parser.add_argument_group('optional arguments')
 	optional.add_argument('-o', '--output', default='groups.tsv', help='Output file.', metavar='', dest='outfile')
 
