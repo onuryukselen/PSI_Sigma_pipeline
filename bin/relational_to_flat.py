@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python
 
 import argparse
 from collections import defaultdict
@@ -15,7 +15,6 @@ def read_comparisons(comparison_infile):
 	controls = set()
 	comparison_key = defaultdict(list)
 	with open(comparison_infile) as infile:
-		infile.readline()
 		for line in infile:
 			cur = line.rstrip().split('\t')
 			if len(cur) == 3:
