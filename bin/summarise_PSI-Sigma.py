@@ -7,7 +7,7 @@ from multiprocessing import Pool
 
 def main(args):
 
-	groups = read_groups(args.all_groups, args.compare_file)
+	groups, samples = read_groups(args.all_groups, args.compare_file, args.group_file)
 
 	p = Pool(args.threads)
 
@@ -18,29 +18,36 @@ def main(args):
 	prepare_barchart_summary(groups)
 
 	p = Pool(args.threads)
-	p.map(build_report, ((group, groups[group][0], groups[group][1]) for group in groups))
+	p.map(build_report, ((group, groups[group][0], groups[group][1], samples) for group in groups))
 	p.close()
 	p.join()
 
-def read_groups(groups_file, compare_file):
+def read_groups(groups_file, compare_file, group_file):
 	
 	groups = {}
+	samples = defaultdict(set)
 
 	if compare_file[:7] == 'NO_FILE':
 		controls = {}
 		treatments = {}
 		with open(groups_file) as infile:
 			for line in infile:
-				sample, code, name = line.split('\t')
+				sample, code, name = line.rstrip().split('\t')
 				if ''.join(filter(str.isdigit, code)) != '0':
 					treatments[name.rstrip()] = ''.join(filter(str.isalpha, code))
 				else:
 					controls[''.join(filter(str.isalpha, code))] = name.rstrip()
+				samples[name].add(sample)
 
 		for treatment in treatments:
 			groups[treatment] = (controls[treatments[treatment]], treatment)
 
 	else:
+		with open(group_file) as infile:
+			infile.readline()
+			for line in infile:
+				cur = line.rstrip().split()
+				samples[cur[1]].add(cur[0])
 		with open(compare_file) as infile:
 			infile.readline()
 			for line in infile:
@@ -50,7 +57,7 @@ def read_groups(groups_file, compare_file):
 				name = cur[2]
 				groups[name] = (control, treatment)
 
-	return groups
+	return groups, samples
 
 def filter_gct(args):
 
@@ -70,15 +77,15 @@ def filter_gct(args):
 
 def build_report(args):
 	
-	name, control, treatment = args
+	name, control, treatment, samples = args
 
 	output = []
-
 	volcano_file = glob.glob('%s*.volcano.txt' % name)[0]
 
 	output.append(print_header(name))
 	output.append(print_libraries())
 	output.append(print_functions())
+	output.append(sample_table(samples, treatment, control))
 	output.append(read_volcano_data(volcano_file))
 	output.append(volcano_results_table(name))
 	output.append(volcano_plot())
@@ -120,11 +127,7 @@ def print_functions():
 
 	return(dedent(
 	'''
-	```{r, functions, include=FALSE}
-	reverselog = function() {
-	  trans_new("reverselog", function(x) -log10(x), function(x) 10^(-x), log_breaks(base = 10), domain = c(1e-1000, Inf))
-	}
-	
+	```{r, functions, include=FALSE}	
 	volcano_plot = function(df, padj_cutoff=.01, dpsi_cutoff=20,
 	                        positive_color='firebrick', noChange_color='grey', negative_color='steelblue',
 	                        positive_alpha=1, noChange_alpha=.3,negative_alpha=1,
@@ -146,7 +149,7 @@ def print_functions():
 	      theme_classic() +
 	      theme(legend.position = 'none') +
 	      scale_x_continuous(limits=c(-100, 100), name='dPSI') +
-	      scale_y_continuous(trans=reverselog(), name='Significance', labels=trans_format('log10',math_format(10^.x))) +
+	      scale_y_continuous(trans=c("log10", "reverse"), name='Significance', labels=trans_format('log10',math_format(10^.x))) +
 	      scale_color_manual(values=colors) +
 	      scale_alpha_manual(values=alphas) +
 	      scale_size_manual(values=sizes) +
@@ -189,7 +192,7 @@ def print_functions():
 	            axis.ticks.y = element_blank(),
 	            axis.line.y = element_blank(),
 	            legend.position = 'none') +
-	      scale_y_continuous(limits=c(-100,100), name=paste0('∆PSI\n[',treatment,' - ', control, ']')) +
+	      scale_y_continuous(limits=c(-100,100), name=paste0('∆PSI\\n[',treatment,' - ', control, ']')) +
 	      scale_color_manual(values=colors) +
 	      scale_alpha_manual(values=c(non_sig_alpha, sig_alpha)) +
 	      scale_size_manual(values=c(non_sig_size, sig_size)) +
@@ -204,7 +207,7 @@ def print_functions():
 	                        exon_inclusion_color='#479FF8', exon_skipping_color='#81D653',
 	                        alt5_color='#EFBD40', alt3_color='#EA4025',
 	                        increase_ir_color='#B45084', decrease_ir_color='#5F5F5F') {
-	                        
+
 	  df = data %>%
 	       pivot_longer(!`File Name`, names_to = "EventType", values_to = "Count") %>%
 	       mutate(EventType = factor(EventType, levels=c("Exon Inclusion", "Exon Skipping", "Alt. 5'-splice-site", "Alt. 3'-splice-site", "Increased IR", "Decreased IR")))
@@ -225,9 +228,24 @@ def print_functions():
 	      geom_bar(stat='identity')
 	  )
 	}
-	```
+	```'''))
+
+def sample_table(samples, treatment, control):
+
+	return(dedent(
 	'''
-	))
+	# Treatments
+	```{{r, treatment_table}}
+	treatments = data.frame(Treatment = c({}))
+	datatable(treatments, rownames=FALSE)
+	```
+
+	# Controls
+
+	```{{r, control_table}}
+	controls = data.frame(Control = c({}))
+	datatable(controls, rownames=FALSE)
+	```'''.format(', '.join(['"%s"' % (i) for i in sorted(samples[treatment])]), ', '.join(['"%s"' % (i) for i in sorted(samples[control])]))))
 
 def read_volcano_data(file):
 
@@ -251,6 +269,7 @@ def volcano_results_table(name):
 	
 	return(dedent(
 	'''
+
 	```{{r volcano_table, warning=FALSE}}
 	rank = data %>% filter(Significant=='Significant') %>% mutate(Rank = row_number(-abs(dPSI))) %>% select(Gene.Symbol, Event.Region, Target.Exon, Event.Type, dPSI, pvalue, Database.ID, Rank)
 	
@@ -376,6 +395,7 @@ def parseArguments():
 	input_args = parser.add_argument_group('Input')
 	input_args.add_argument('-a', '--all-groups', required=True, help='Name of all_groups file.', metavar='', dest='all_groups')
 	input_args.add_argument('-c', '--comparison-file', required=True, help='Name of comparison file.', metavar='', dest='compare_file')
+	input_args.add_argument('-g', '--group-file', required=True, help='Name of group file.', metavar='', dest='group_file')
 	input_args.add_argument('-s', '--script-path', default = 'PSI-Sigma_filter_v1.2.pl', help='Path to PSI-Sigma_filter script', metavar='', dest='script_path')
 	input_args.add_argument('-t', '--threads', type=int, default=1, help='Number of threads to use for knitting.', metavar='', dest='threads')
 
