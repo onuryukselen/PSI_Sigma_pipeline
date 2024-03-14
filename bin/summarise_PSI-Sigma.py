@@ -234,17 +234,17 @@ def sample_table(samples, treatment, control):
 
 	return(dedent(
 	'''
-	# Treatments
+	# Samples
 	```{{r, treatment_table}}
-	treatments = data.frame(Treatment = c({}))
-	datatable(treatments, rownames=FALSE)
-	```
+	treatments = data.frame(Treatments = c({})) %>%
+	             mutate(Index = row_number())
 
-	# Controls
+	controls = data.frame(Controls = c({})) %>%
+	           mutate(Index = row_number())
+	
+	combined = treatments %>% full_join(controls, by='Index') %>% select(Treatments, Controls)
 
-	```{{r, control_table}}
-	controls = data.frame(Control = c({}))
-	datatable(controls, rownames=FALSE)
+	datatable(combined, rownames = FALSE)
 	```'''.format(', '.join(['"%s"' % (i) for i in sorted(samples[treatment])]), ', '.join(['"%s"' % (i) for i in sorted(samples[control])]))))
 
 def read_volcano_data(file):
