@@ -68,7 +68,12 @@ def filter_gct(args):
 	else:
 		sorted_file = glob.glob('%s*sorted.txt' % group)[0]
 
-	gct_file = glob.glob('%s*denominator.gct' % group)[0]
+
+	if args.mode == 'local':
+		gct_file = glob.glob('%s*denominator.gct' % group)[0]
+	else:
+		gct_file = glob.glob('*alldenominator.gct')[0]
+
 	cmd = "%s %s %s %d %d" % (script_path, sorted_file, gct_file, min_control, min_treatment)
 	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 	(out, err) = proc.communicate()
@@ -398,6 +403,7 @@ def parseArguments():
 	input_args.add_argument('-g', '--group-file', required=True, help='Name of group file.', metavar='', dest='group_file')
 	input_args.add_argument('-s', '--script-path', default = 'PSI-Sigma_filter_v1.2.pl', help='Path to PSI-Sigma_filter script', metavar='', dest='script_path')
 	input_args.add_argument('-t', '--threads', type=int, default=1, help='Number of threads to use for knitting.', metavar='', dest='threads')
+	input_args.add_argument('-d', '--mode', required=True, choices=['local', 'global'], help='Denominator mode. Use local or global denominator.gct', metavar='', dest='mode')
 
 	filter_args = parser.add_argument_group('Filtering')
 	filter_args.add_argument('-m', '--min-control', default=2, type=int, help='Minimal number of control samples.', metavar='', dest='min_control')
